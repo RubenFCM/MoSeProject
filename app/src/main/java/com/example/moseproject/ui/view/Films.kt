@@ -73,7 +73,7 @@ fun Films(navController: NavController){
                     RowListFilm(films = filmsUpcoming, navController = navController)
                 }
                 item {
-                    TitleRow(title = "Mejor valoradas",navController)
+                    TitleRow(title = "Películas mejor valoradas",navController)
                 }
                 item {
                     RowListFilm(films = filmsTop, navController = navController )

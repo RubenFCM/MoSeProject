@@ -17,7 +17,10 @@ class VideoViewModel : ViewModel(){
 
     val video : StateFlow<VideoResult?> get() = _video
 
+    private val _isLoadingVideo = MutableStateFlow(true)
+    val isLoadingVideo: StateFlow<Boolean> get() = _isLoadingVideo
     fun getVideoFilmById(id:String){
+        _isLoadingVideo.value = true
         viewModelScope.launch {
             try {
                 val result = service.VideoMovie(id, Constants.API_KEY)
@@ -29,10 +32,13 @@ class VideoViewModel : ViewModel(){
             } catch (e: Exception) {
                 println("Error retrofit")
                 e.printStackTrace()
+            }finally {
+                _isLoadingVideo.value = false
             }
         }
     }
     fun getVideoSerieById(id:String){
+        _isLoadingVideo.value = true
         viewModelScope.launch {
             try {
                 val result = service.VideoSerie(id, Constants.API_KEY)
@@ -44,6 +50,8 @@ class VideoViewModel : ViewModel(){
             } catch (e: Exception) {
                 println("Error retrofit")
                 e.printStackTrace()
+            }finally {
+                _isLoadingVideo.value = false
             }
         }
     }

@@ -17,6 +17,8 @@ class TopRatedFilmViewModel :ViewModel() {
     private val _films = MutableStateFlow<List<FilmResult>>(emptyList())
     val films : StateFlow<List<FilmResult>> get() = _films
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getFilmsTopRated(){
         viewModelScope.launch {
             val filmsTopRated = service.listTopRatedFilms(Constants.API_KEY,1)
@@ -37,6 +39,7 @@ class TopRatedFilmViewModel :ViewModel() {
     val  filmsPlus : StateFlow<List<Result>> get() = _filmsPlus
 
     fun getFilmsTopRatedPlus(){
+        _isLoading.value = true
         viewModelScope.launch {
             val allFilms = mutableListOf<Result>()
             try {
@@ -52,6 +55,8 @@ class TopRatedFilmViewModel :ViewModel() {
                 _filmsPlus.value = allFilms
             }catch (e: Exception){
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

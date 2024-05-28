@@ -2,6 +2,7 @@ package com.example.moseproject.ui.view
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -36,6 +38,7 @@ import com.example.moseproject.data.utils.Constants
 import com.example.moseproject.data.utils.ScreenType
 import com.example.moseproject.navigation.AppScreen
 import com.example.moseproject.ui.view.components.LateralMenu
+import com.example.moseproject.ui.view.components.Progress
 import com.example.moseproject.ui.view.components.Topbar
 import com.example.moseproject.ui.viewmodel.PeopleViewModel
 
@@ -49,7 +52,7 @@ fun People(navController: NavController){
     peopleViewModel.getPeople()
 
     val people by peopleViewModel.listPeople.collectAsState(initial = emptyList())
-
+    val isLoading by peopleViewModel.isLoading.collectAsState()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -61,59 +64,63 @@ fun People(navController: NavController){
             topBar = { Topbar(title = "Gente Popular", navController, currentScreen,drawerState,scope) },
         )
         {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3), // 3 columnas
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 60.dp)
-            ) {
-                items(people.size) { index ->
-                    Card(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxWidth()
-                            .clickable {
-                                       navController.navigate(route = AppScreen.PersonID.route+ "/" + people[index].id)
-                            },
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.Transparent
-                        )
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+            if (isLoading) {
+                Progress()
+            }else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3), // 3 columnas
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 60.dp)
+                ) {
+                    items(people.size) { index ->
+                        Card(
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .fillMaxWidth()
+                                .clickable {
+                                    navController.navigate(route = AppScreen.PersonID.route + "/" + people[index].id)
+                                },
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.Transparent
+                            )
                         ) {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color.Transparent
-                                )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(Constants.BASE_URL_IMAGES_W220 + people[index].profile_path)
-                                        .crossfade(true)
-                                        .scale(Scale.FIT)
-                                        .build(),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .height(150.dp)
-                                        .width(120.dp)
-                                        .scale(1.2f, 1.2f)
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color.Transparent
+                                    )
+                                ) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(Constants.BASE_URL_IMAGES_W220 + people[index].profile_path)
+                                            .crossfade(true)
+                                            .scale(Scale.FIT)
+                                            .build(),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .height(150.dp)
+                                            .width(120.dp)
+                                            .scale(1.2f, 1.2f)
+                                    )
+                                }
+                                Text(
+                                    text = people[index].name ,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                                Text(
+                                    text = when (people[index].known_for_department) {
+                                        "Acting" -> "Interpretación"
+                                        "Directing" -> "Dirección"
+                                        else -> "Desconocido"
+                                    } ,
+                                    color = Color.LightGray,
+                                    modifier = Modifier.padding(bottom = 8.dp)
                                 )
                             }
-                            Text(
-                                text = people[index].name ,
-                                color = Color.White,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                            Text(
-                                text = when (people[index].known_for_department) {
-                                    "Acting" -> "Interpretación"
-                                    "Directing" -> "Dirección"
-                                    else -> "Desconocido"
-                                } ,
-                                color = Color.LightGray,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
                         }
                     }
                 }

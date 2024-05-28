@@ -19,6 +19,8 @@ class TrendingSerieViewModel :ViewModel() {
     private val _listSeries = MutableStateFlow<List<SerieResult>>(emptyList())
     val listSeries : StateFlow<List<SerieResult>> get() = _listSeries
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getSeriesTrending(){
         viewModelScope.launch {
             val series = service.listTrendigSeries(Constants.API_KEY,1)
@@ -38,6 +40,7 @@ class TrendingSerieViewModel :ViewModel() {
     val  seriesPlus : StateFlow<List<ResultSerie>> get() = _seriesPlus
 
     fun getSeriesTrendingPlus(){
+        _isLoading.value = true
         viewModelScope.launch {
             val allSeries = mutableListOf<ResultSerie>()
             try {
@@ -53,6 +56,8 @@ class TrendingSerieViewModel :ViewModel() {
                 _seriesPlus.value = allSeries
             }catch (e: Exception){
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

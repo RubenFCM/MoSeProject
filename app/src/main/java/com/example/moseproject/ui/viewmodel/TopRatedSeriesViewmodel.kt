@@ -16,6 +16,8 @@ class TopRatedSeriesViewmodel:ViewModel() {
 
     private val _series = MutableStateFlow<List<SerieResult>>(emptyList())
     val series : StateFlow<List<SerieResult>> get() = _series
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     // Almacenar lista de peliculas Próximos estrenos, ordenada por fecha de estreno
 
     fun getSeriesTopRated(){
@@ -37,6 +39,7 @@ class TopRatedSeriesViewmodel:ViewModel() {
     val  seriesPlus : StateFlow<List<ResultSerie>> get() = _seriesPlus
 
     fun getSeriesTopRatedPlus(){
+        _isLoading.value = true
         viewModelScope.launch {
             val allSeries = mutableListOf<ResultSerie>()
             try {
@@ -52,6 +55,8 @@ class TopRatedSeriesViewmodel:ViewModel() {
                 _seriesPlus.value = allSeries
             }catch (e: Exception){
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

@@ -17,7 +17,10 @@ class FilmIdViewModel :ViewModel() {
 
     val film : StateFlow<FilmIdResult?> get() = _film
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getFilmById(id:String){
+        _isLoading.value = true
         viewModelScope.launch {
             try {
                 val filmID = service.SearchByIdFilm(id,Constants.API_KEY)
@@ -25,6 +28,8 @@ class FilmIdViewModel :ViewModel() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 _film.value = null
+            }finally {
+                _isLoading.value = false
             }
         }
     }

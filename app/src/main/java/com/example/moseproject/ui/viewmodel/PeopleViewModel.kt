@@ -17,10 +17,11 @@ class PeopleViewModel :ViewModel(){
     private val _listPeople = MutableStateFlow<List<ResultPeople>>(emptyList())
     val listPeople: StateFlow<List<ResultPeople>> get() = _listPeople
 
-
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getPeople(){
         viewModelScope.launch {
-
+            _isLoading.value = true
             val allPeople = mutableListOf<ResultPeople>()
             try {
                 for (page in 1..12){
@@ -36,6 +37,8 @@ class PeopleViewModel :ViewModel(){
             }catch (e: Exception){
 
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

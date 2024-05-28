@@ -89,7 +89,7 @@ fun Series(navController:NavController){
                     RowListSeries(series = seriesTrending, navController = navController )
                 }
                 item {
-                    TitleRow(title = "Mejor valoradas", navController = navController)
+                    TitleRow(title = "Series mejor valoradas", navController = navController)
                 }
                 item {
                     RowListSeries(series = seriesTopRated, navController = navController )

@@ -17,13 +17,18 @@ class SerieIDViewModel : ViewModel() {
 
     val serie : StateFlow<SerieIDResult?> get() = _serie
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getSerieById(id:String){
+        _isLoading.value = true
         viewModelScope.launch {
             try {
                 val serieID = service.SearchByIdSerie(id,Constants.API_KEY)
                 _serie.value = serieID
             }catch (e : Exception){
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

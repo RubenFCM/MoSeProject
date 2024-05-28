@@ -17,6 +17,8 @@ class AiringTodayViewModel :ViewModel(){
     private val _series = MutableStateFlow<List<SerieResult>>(emptyList())
     val series : StateFlow<List<SerieResult>> get() = _series
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     // Almacenar lista de peliculas Próximos estrenos, ordenada por fecha de estreno
 
     fun getSeriesToday(){
@@ -38,6 +40,7 @@ class AiringTodayViewModel :ViewModel(){
     val  seriesPlus : StateFlow<List<ResultSerie>> get() = _seriesPlus
 
     fun getSeriesTodayPlus(){
+        _isLoading.value = true
         viewModelScope.launch {
             val allSeries = mutableListOf<ResultSerie>()
             try {
@@ -53,6 +56,8 @@ class AiringTodayViewModel :ViewModel(){
                 _seriesPlus.value = allSeries
             }catch (e: Exception){
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

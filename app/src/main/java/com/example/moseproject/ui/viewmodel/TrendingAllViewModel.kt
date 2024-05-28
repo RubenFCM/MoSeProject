@@ -16,19 +16,27 @@ class TrendingAllViewModel :ViewModel() {
 
     private val _all = MutableStateFlow<List<All>>(emptyList())
     val  all : StateFlow<List<All>> get() = _all
-
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getAllTrendingWeek(){
+        _isLoading.value = true
         viewModelScope.launch {
-            val allTrending = service.listTendringAllWeek(Constants.API_KEY,1)
-            val allResult = allTrending.results.map { result ->
-                All(
-                    page = allTrending.page,
-                    results = listOf(result),
-                    total_pages = allTrending.total_pages,
-                    total_results = allTrending.total_results
-                )
+            try {
+                val allTrending = service.listTendringAllWeek(Constants.API_KEY,1)
+                val allResult = allTrending.results.map { result ->
+                    All(
+                        page = allTrending.page,
+                        results = listOf(result),
+                        total_pages = allTrending.total_pages,
+                        total_results = allTrending.total_results
+                    )
+                }
+                _all.value = allResult
+            }catch (e :Exception){
+                e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
-            _all.value = allResult
         }
     }
 
@@ -37,6 +45,7 @@ class TrendingAllViewModel :ViewModel() {
 
 
     fun getAllTrendingWeekPlus(){
+        _isLoading.value = true
         viewModelScope.launch {
             val allFilmsSeries = mutableListOf<ResultAll>()
             try {
@@ -53,6 +62,8 @@ class TrendingAllViewModel :ViewModel() {
             }catch (e: Exception){
 
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

@@ -33,6 +33,7 @@ import com.example.moseproject.data.utils.ScreenType
 import com.example.moseproject.ui.view.components.BackImage
 import com.example.moseproject.ui.view.components.Companies
 import com.example.moseproject.ui.view.components.ImageOnImage
+import com.example.moseproject.ui.view.components.Progress
 import com.example.moseproject.ui.view.components.RecomendationsFilm
 import com.example.moseproject.ui.view.components.TitleOnImage
 import com.example.moseproject.ui.view.components.VideoPlayerExo
@@ -74,112 +75,118 @@ fun DataFilm(navController: NavController, id : String?){
     }
 
     val recomendations by recomendationsFilmViewModel.films.collectAsState(initial = emptyList())
-
-    LazyColumn() {
-        item {
-            Box (
-                modifier = Modifier
-                    .height(250.dp)
-                    .fillMaxWidth()
-            ){
-                BackImage(image = film.value?.backdrop_path.toString())
-                IconButton(
-                    onClick = { navController.popBackStack() },
+    val isLoading by filmIdViewModel.isLoading.collectAsState()
+    val isLoadingVideo by videoViewModel.isLoadingVideo.collectAsState()
+    if (isLoading || isLoadingVideo){
+        Progress()
+    }else{
+        LazyColumn() {
+            item {
+                Box (
                     modifier = Modifier
-                        .absoluteOffset(x = 4.dp, y = 6.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White
-                    )
-                }
-                TitleOnImage(title = film.value?.title.toString())
-                ImageOnImage(image = film.value?.poster_path.toString())
-            }
-            Column( modifier = Modifier
-                .height(140.dp)
-                .padding(bottom = 4.dp),
-                verticalArrangement = Arrangement.SpaceAround
-            ){
-                Text(text = "Estreno: " + film.value?.release_date.toString() +" (ES)" , color = Color.White)
-                Text(text = "Presupuesto: " + (film.value?.budget?.takeIf { it != 0 } ?: "n/a"), color = Color.White)
-                Text(text = "Recaudado: " + (film.value?.budget?.takeIf { it != 0 } ?: "n/a"), color = Color.White)
-                Row {
-                    Text(text = "Origen: " + film.value?.origin_country?.get(0), color = Color.White)
-                    Spacer(modifier = Modifier.padding(start = 24.dp))
-                    Text(text = "Puntuación: " + film.value?.vote_average , color = Color.White)
-                }
-            }
-        }
-        item {
-            Row (
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ){
-                Box(
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .border(2.dp, Color.Gray, RoundedCornerShape(24.dp))
-                ) {
-                    Row(
+                        .height(250.dp)
+                        .fillMaxWidth()
+                ){
+                    BackImage(image = film.value?.backdrop_path.toString())
+                    IconButton(
+                        onClick = { navController.popBackStack() },
                         modifier = Modifier
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .absoluteOffset(x = 4.dp, y = 6.dp)
                     ) {
-                        val totalGenres = film.value?.genres?.size ?: 0
-                        film.value?.genres?.forEachIndexed { index, genre ->
-                            Text(
-                                text = genre.name + if (index < totalGenres -1) " | " else "",
-                                color = Color.White,
-                                fontSize = 14.sp
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
+                    TitleOnImage(title = film.value?.title.toString())
+                    ImageOnImage(image = film.value?.poster_path.toString())
+                }
+                Column( modifier = Modifier
+                    .height(140.dp)
+                    .padding(bottom = 4.dp),
+                    verticalArrangement = Arrangement.SpaceAround
+                ){
+                    Text(text = "Estreno: " + film.value?.release_date.toString() +" (ES)" , color = Color.White)
+                    Text(text = "Presupuesto: " + (film.value?.budget?.takeIf { it != 0 } ?: "n/a"), color = Color.White)
+                    Text(text = "Recaudado: " + (film.value?.budget?.takeIf { it != 0 } ?: "n/a"), color = Color.White)
+                    Row {
+                        Text(text = "Origen: " + film.value?.origin_country?.get(0), color = Color.White)
+                        Spacer(modifier = Modifier.padding(start = 24.dp))
+                        Text(text = "Puntuación: " + film.value?.vote_average , color = Color.White)
                     }
                 }
-                Text(text = film.value?.runtime.toString()+" min",modifier = Modifier.padding(top = 6.dp), color = Color.White,fontSize = 14.sp)
             }
-        }
-        item {
-            Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
-            Column {
-                Text(text = film.value?.title.toString() , modifier = Modifier.padding(bottom = 6.dp), color = Color.White)
-                Text(text = film.value?.overview.toString(), color = Color.LightGray)
-            }
-            Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
-        }
-        if (key != ""){
             item {
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .border(2.dp, Color.Gray, RoundedCornerShape(24.dp))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            val totalGenres = film.value?.genres?.size ?: 0
+                            film.value?.genres?.forEachIndexed { index, genre ->
+                                Text(
+                                    text = genre.name + if (index < totalGenres -1) " | " else "",
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
+                    Text(text = film.value?.runtime.toString()+" min",modifier = Modifier.padding(top = 6.dp), color = Color.White,fontSize = 14.sp)
+                }
+            }
+            item {
+                Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
                 Column {
-                    Text(text = "Tráiler", color = Color.White)
-                    VideoPlayerExo(videoUrl = key , lifecycleOwner = LocalLifecycleOwner.current)
+                    Text(text = film.value?.title.toString() , modifier = Modifier.padding(bottom = 6.dp), color = Color.White)
+                    Text(text = film.value?.overview.toString(), color = Color.LightGray)
+                }
+                Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
+            }
+            if (key != ""){
+                item {
+                    Column {
+                        Text(text = "Tráiler", color = Color.White)
+                        VideoPlayerExo(videoUrl = key , lifecycleOwner = LocalLifecycleOwner.current)
+                    }
                 }
             }
-        }
-        item{
-            Cast(navController,film.value?.id.toString(),screenType)
-        }
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Box(
-                modifier = Modifier
-                    .padding()
-                    .border(
-                        width = 1.dp,
-                        color = Color.Gray,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-            ) {
-                if (!companies.isNullOrEmpty()) {
-                    Companies(companies = companies)
+            item{
+                Cast(navController,film.value?.id.toString(),screenType)
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .padding()
+                        .border(
+                            width = 1.dp,
+                            color = Color.Gray,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                ) {
+                    if (!companies.isNullOrEmpty()) {
+                        Companies(companies = companies)
+                    }
                 }
             }
-        }
-        item {
-            if (!recomendations.isNullOrEmpty()){
-                RecomendationsFilm(navController,recomendations)
+            item {
+                if (!recomendations.isNullOrEmpty()){
+                    RecomendationsFilm(navController,recomendations)
+                }
             }
         }
     }
+
 }
 
 

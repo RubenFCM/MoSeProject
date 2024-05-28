@@ -18,6 +18,9 @@ class UpcomingFilmViewModel:ViewModel() {
     private val _films = MutableStateFlow<List<FilmResult>>(emptyList())
     val films : StateFlow<List<FilmResult>> get() = _films
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
+
     // Almacenar lista de peliculas Próximos estrenos, ordenada por fecha de estreno
 
     fun getFilmsUpcoming(){
@@ -42,6 +45,7 @@ class UpcomingFilmViewModel:ViewModel() {
 
 
     fun getFilmsUpcomingPlus(){
+        _isLoading.value = true
         viewModelScope.launch {
             val allFilms = mutableListOf<Result>()
             try {
@@ -57,6 +61,8 @@ class UpcomingFilmViewModel:ViewModel() {
                 _filmsPlus.value = allFilms
             }catch (e: Exception){
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

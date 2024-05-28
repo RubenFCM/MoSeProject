@@ -34,6 +34,7 @@ import com.example.moseproject.ui.view.components.BackImage
 import com.example.moseproject.ui.view.components.Companies
 import com.example.moseproject.ui.view.components.ImageOnImage
 import com.example.moseproject.ui.view.components.Networks
+import com.example.moseproject.ui.view.components.Progress
 import com.example.moseproject.ui.view.components.RecomendationsSerie
 import com.example.moseproject.ui.view.components.TitleOnImage
 import com.example.moseproject.ui.view.components.VideoPlayerExo
@@ -48,7 +49,7 @@ fun DataSerie(navController: NavController, id : String?){
 
     val serieIdViewModel: SerieIDViewModel = viewModel()
     val videoViewModel : VideoViewModel = viewModel()
-    var recomendationsSerieViewModel : RecomendationsViewModel = viewModel()
+    val recomendationsSerieViewModel : RecomendationsViewModel = viewModel()
 
     if (id != null){
         serieIdViewModel.getSerieById(id)
@@ -77,122 +78,128 @@ fun DataSerie(navController: NavController, id : String?){
 
     val recomendations by recomendationsSerieViewModel.series.collectAsState(initial= emptyList())
 
-    LazyColumn() {
-        item {
-            Box (
-                modifier = Modifier
-                    .height(250.dp)
-                    .fillMaxWidth()
-            ){
-                BackImage(image = serie.value?.backdrop_path.toString())
-                IconButton(
-                    onClick = { navController.popBackStack() },
+    val isLoadingVideo by videoViewModel.isLoadingVideo.collectAsState()
+    val isLoading by serieIdViewModel.isLoading.collectAsState()
+    if (isLoading || isLoadingVideo){
+        Progress()
+    }else{
+        LazyColumn() {
+            item {
+                Box (
                     modifier = Modifier
-                        .absoluteOffset(x = 4.dp, y = 6.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White
-                    )
-                }
-                TitleOnImage(title = serie.value?.name.toString())
-                ImageOnImage(image = serie.value?.poster_path.toString())
-            }
-            Column( modifier = Modifier
-                .height(140.dp)
-                .padding(bottom = 12.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ){
-                Text(text = "Estrenada: " + serie.value?.first_air_date.toString() +" (ES)" , color = Color.White)
-                Text(text = "Origen: " + serie.value?.production_countries?.get(0)?.name.toString(), color = Color.White)
-                Text(text = "Puntuación: " + serie.value?.vote_average?.toString(), color = Color.White)
-                if (serie.value?.status == "Returning Series"){
-                    Text(text = "Estado: Volverá a emitirse", color = Color.White)
-                }else{
-                    Text(text = "Estado: Finalizado", color = Color.White)
-                }
-            }
-        }
-        item {
-            Row (
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ){
-                Box(
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .border(2.dp, Color.Gray, RoundedCornerShape(24.dp))
-                ) {
-                    Row(
+                        .height(250.dp)
+                        .fillMaxWidth()
+                ){
+                    BackImage(image = serie.value?.backdrop_path.toString())
+                    IconButton(
+                        onClick = { navController.popBackStack() },
                         modifier = Modifier
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .absoluteOffset(x = 4.dp, y = 6.dp)
                     ) {
-                        val totalGenres = serie.value?.genres?.size ?: 0
-                        serie.value?.genres?.forEachIndexed { index, genre ->
-                            Text(
-                                text = genre.name + if (index < totalGenres -1) " | " else "",
-                                color = Color.White,
-                                fontSize = 12.sp
-                            )
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
+                    TitleOnImage(title = serie.value?.name.toString())
+                    ImageOnImage(image = serie.value?.poster_path.toString())
+                }
+                Column( modifier = Modifier
+                    .height(140.dp)
+                    .padding(bottom = 12.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ){
+                    Text(text = "Estrenada: " + serie.value?.first_air_date.toString() +" (ES)" , color = Color.White)
+                    Text(text = "Origen: " + serie.value?.production_countries?.get(0)?.name.toString(), color = Color.White)
+                    Text(text = "Puntuación: " + serie.value?.vote_average?.toString(), color = Color.White)
+                    if (serie.value?.status == "Returning Series"){
+                        Text(text = "Estado: Volverá a emitirse", color = Color.White)
+                    }else{
+                        Text(text = "Estado: Finalizado", color = Color.White)
+                    }
+                }
+            }
+            item {
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .border(2.dp, Color.Gray, RoundedCornerShape(24.dp))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            val totalGenres = serie.value?.genres?.size ?: 0
+                            serie.value?.genres?.forEachIndexed { index, genre ->
+                                Text(
+                                    text = genre.name + if (index < totalGenres -1) " | " else "",
+                                    color = Color.White,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
-        item {
-            Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
-            Column {
-                Text(text = serie.value?.name.toString() , modifier = Modifier.padding(bottom = 6.dp), color = Color.White)
-                Text(text = serie.value?.overview.toString(), color = Color.LightGray)
-            }
-            Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
-        }
-        if (key != ""){
             item {
+                Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
                 Column {
-                    Text(text = "Tráiler", color = Color.White)
-                    VideoPlayerExo(videoUrl = key , lifecycleOwner = LocalLifecycleOwner.current)
+                    Text(text = serie.value?.name.toString() , modifier = Modifier.padding(bottom = 6.dp), color = Color.White)
+                    Text(text = serie.value?.overview.toString(), color = Color.LightGray)
+                }
+                Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
+            }
+            if (key != ""){
+                item {
+                    Column {
+                        Text(text = "Tráiler", color = Color.White)
+                        VideoPlayerExo(videoUrl = key , lifecycleOwner = LocalLifecycleOwner.current)
+                    }
                 }
             }
-        }
-        item{
-            Cast(navController,serie.value?.id.toString(),screenType)
-        }
-        if (companies != null){
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Box(
-                    modifier = Modifier
-                        .padding()
-                        .border(
-                            width = 1.dp,
-                            color = Color.White,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                ) {
-                    Companies(companies = companies )
-                }
-            }
-        }
-        if (networtk != null){
             item{
-                Spacer(modifier = Modifier.height(16.dp))
-                Box(
-                    modifier = Modifier
-                        .padding()
-                        .border(
-                            width = 1.dp,
-                            color = Color.White,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                ) {
-                    Networks(net = networtk)
+                Cast(navController,serie.value?.id.toString(),screenType)
+            }
+            if (companies != null){
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .padding()
+                            .border(
+                                width = 1.dp,
+                                color = Color.White,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                    ) {
+                        Companies(companies = companies )
+                    }
                 }
             }
-        }
-        item {
-            RecomendationsSerie(navController = navController, data = recomendations)
+            if (networtk != null){
+                item{
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .padding()
+                            .border(
+                                width = 1.dp,
+                                color = Color.White,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                    ) {
+                        Networks(net = networtk)
+                    }
+                }
+            }
+            item {
+                RecomendationsSerie(navController = navController, data = recomendations)
+            }
         }
     }
 }

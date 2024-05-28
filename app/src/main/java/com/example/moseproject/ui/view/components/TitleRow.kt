@@ -36,7 +36,7 @@ fun TitleRow(title:String, navController : NavController){
                 if (title == "Próximamente"){
                     navController.navigate(route = AppScreen.UpcomingFilm.route)
                 }
-                if (title == "Mejor valoradas"){
+                if (title == "Películas mejor valoradas"){
                     navController.navigate(route = AppScreen.TopFilm.route)
                 }
                 if (title == "Nuevos capítulos"){
@@ -45,7 +45,7 @@ fun TitleRow(title:String, navController : NavController){
                 if (title == "Trending"){
                     navController.navigate(route = AppScreen.SeriesTrending.route)
                 }
-                if (title == "Mejor valoradas"){
+                if (title == "Series mejor valoradas"){
                     navController.navigate(route = AppScreen.SeriesTop.route)
                 }
         },
