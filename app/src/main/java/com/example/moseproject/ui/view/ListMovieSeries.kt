@@ -162,7 +162,7 @@ fun ListMovieTopPlus(navController: NavController){
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ListSerieToday(navController: NavController){
-    var currentScreen = ScreenType.FILM
+    var currentScreen = ScreenType.SERIES
 
     val airingTodayViewModel:AiringTodayViewModel = viewModel()
 
@@ -192,7 +192,7 @@ fun ListSerieToday(navController: NavController){
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ListSerieTrending(navController: NavController){
-    var currentScreen = ScreenType.FILM
+    var currentScreen = ScreenType.SERIES
 
     val trendingSerieViewModel:TrendingSerieViewModel = viewModel()
 
@@ -223,7 +223,7 @@ fun ListSerieTrending(navController: NavController){
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ListSerieTop(navController: NavController){
-    var currentScreen = ScreenType.FILM
+    var currentScreen = ScreenType.SERIES
 
     val topRatedSeriesViewmodel:TopRatedSeriesViewmodel = viewModel()
 

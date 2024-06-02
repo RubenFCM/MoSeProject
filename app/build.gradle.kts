@@ -88,6 +88,11 @@ dependencies {
     implementation("androidx.media3:media3-common:1.3.1")
     /* Youtube */
     implementation("com.pierfrancescosoffritti.androidyoutubeplayer:chromecast-sender:0.28")
+    /* Tests */
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+    testImplementation("io.mockk:mockk:1.13.2")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.20")
+    testImplementation ("androidx.arch.core:core-testing:2.1.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

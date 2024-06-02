@@ -16,7 +16,10 @@ class CreditsFilmViewModel :ViewModel() {
 
     val credits : StateFlow<CreditsResult?> get() = _credits
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getFilmById(id:String){
+        _isLoading.value = true
         viewModelScope.launch {
             try {
                 val result = service.CastFilm(id, Constants.API_KEY)
@@ -24,6 +27,8 @@ class CreditsFilmViewModel :ViewModel() {
             } catch (e: Exception) {
                 println("Error retrofit")
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

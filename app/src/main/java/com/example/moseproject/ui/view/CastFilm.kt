@@ -21,18 +21,18 @@ import com.example.moseproject.ui.viewmodel.CreditsFilmViewModel
 @Composable
 fun Cast(navController: NavController,id :String, screenType: ScreenType){
 
-    val creditsFilmViewModel : CreditsFilmViewModel = viewModel()
+    val creditsFilmSerieViewModel : CreditsFilmViewModel = viewModel()
 
     if (screenType == ScreenType.FILM){
-        creditsFilmViewModel.getFilmById(id)
+        creditsFilmSerieViewModel.getFilmById(id)
     }
 
     if (screenType == ScreenType.SERIES){
-        creditsFilmViewModel.getSerieCreditsById(id)
+        creditsFilmSerieViewModel.getSerieCreditsById(id)
     }
 
 
-    val credits = creditsFilmViewModel.credits.collectAsState()
+    val credits = creditsFilmSerieViewModel.credits.collectAsState()
 
     val imagesCast  = credits.value?.cast?.map { cast ->
         if (cast.profile_path != null){

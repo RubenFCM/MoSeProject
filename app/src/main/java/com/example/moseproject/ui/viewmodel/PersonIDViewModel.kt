@@ -22,10 +22,9 @@ class PersonIDViewModel: ViewModel() {
                 val person = service.searchPerson(id,Constants.API_KEY)
                 _dataPerson.value = person
             }catch (e: Exception){
-                println("Error retrofit")
                 e.printStackTrace()
+                _dataPerson.value = null
             }
-
         }
     }
 }

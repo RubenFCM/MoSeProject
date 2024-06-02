@@ -1,5 +1,6 @@
 package com.example.moseproject.ui.view
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +43,7 @@ import com.example.moseproject.ui.viewmodel.RecomendationsViewModel
 import com.example.moseproject.ui.viewmodel.VideoViewModel
 
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun DataFilm(navController: NavController, id : String?){
 
@@ -75,11 +77,7 @@ fun DataFilm(navController: NavController, id : String?){
     }
 
     val recomendations by recomendationsFilmViewModel.films.collectAsState(initial = emptyList())
-    val isLoading by filmIdViewModel.isLoading.collectAsState()
-    val isLoadingVideo by videoViewModel.isLoadingVideo.collectAsState()
-    if (isLoading || isLoadingVideo){
-        Progress()
-    }else{
+
         LazyColumn() {
             item {
                 Box (
@@ -132,7 +130,7 @@ fun DataFilm(navController: NavController, id : String?){
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             val totalGenres = film.value?.genres?.size ?: 0
-                            film.value?.genres?.forEachIndexed { index, genre ->
+                            film.value?.genres?.take(4)?.forEachIndexed { index, genre ->
                                 Text(
                                     text = genre.name + if (index < totalGenres -1) " | " else "",
                                     color = Color.White,
@@ -185,7 +183,7 @@ fun DataFilm(navController: NavController, id : String?){
                 }
             }
         }
-    }
+
 
 }
 

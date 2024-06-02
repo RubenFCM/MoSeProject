@@ -1,6 +1,7 @@
 package com.example.moseproject.ui.view
 
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +43,7 @@ import com.example.moseproject.ui.viewmodel.RecomendationsViewModel
 import com.example.moseproject.ui.viewmodel.SerieIDViewModel
 import com.example.moseproject.ui.viewmodel.VideoViewModel
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun DataSerie(navController: NavController, id : String?){
 
@@ -78,11 +80,7 @@ fun DataSerie(navController: NavController, id : String?){
 
     val recomendations by recomendationsSerieViewModel.series.collectAsState(initial= emptyList())
 
-    val isLoadingVideo by videoViewModel.isLoadingVideo.collectAsState()
-    val isLoading by serieIdViewModel.isLoading.collectAsState()
-    if (isLoading || isLoadingVideo){
-        Progress()
-    }else{
+
         LazyColumn() {
             item {
                 Box (
@@ -135,7 +133,7 @@ fun DataSerie(navController: NavController, id : String?){
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             val totalGenres = serie.value?.genres?.size ?: 0
-                            serie.value?.genres?.forEachIndexed { index, genre ->
+                            serie.value?.genres?.take(4)?.forEachIndexed { index, genre ->
                                 Text(
                                     text = genre.name + if (index < totalGenres -1) " | " else "",
                                     color = Color.White,
@@ -198,10 +196,11 @@ fun DataSerie(navController: NavController, id : String?){
                 }
             }
             item {
-                RecomendationsSerie(navController = navController, data = recomendations)
+                if (!recomendations.isNullOrEmpty()){
+                    RecomendationsSerie(navController = navController, data = recomendations)
+                }
             }
         }
-    }
 }
 
 
