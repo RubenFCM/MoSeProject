@@ -1,4 +1,4 @@
-package com.example.moseproject.ui.view
+package com.example.moseproject.ui.view.components
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box

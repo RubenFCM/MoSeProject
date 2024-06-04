@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -55,6 +56,7 @@ import java.time.Period
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import com.example.moseproject.R
+import com.example.moseproject.data.model.KnownForResult
 import com.example.moseproject.navigation.AppScreen
 import com.example.moseproject.ui.viewmodel.KnowForViewModel
 
@@ -92,17 +94,34 @@ fun DataPerson(navController: NavController, id: String?){
                 modifier = Modifier
                     .fillMaxWidth()
             ){
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier
-                        .absoluteOffset(x = 4.dp, y = 6.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White
-                    )
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier
+                            .absoluteOffset(x = 4.dp, y = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(
+                        onClick = { navController.navigate(route = AppScreen.PeopleScreen.route) },
+                        modifier = Modifier
+                            .absoluteOffset(y = 6.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_people),
+                            contentDescription = "Volver a pantalla de gente popular",
+                            tint = Color.White
+                        )
+                    }
                 }
+
             }
         }
         item {
@@ -142,49 +161,8 @@ fun DataPerson(navController: NavController, id: String?){
             }
         }
         item {
-            TextInfoTitle(text = "Conocido por")
-            LazyRow(modifier = Modifier.fillMaxSize()) {
-                items(images.size){ res ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 4.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = colorResource(id = R.color.lateral_menu)
-                        ),
-                    ) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(images[res])
-                                    .crossfade(true)
-                                    .scale(Scale.FIT)
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .height(210.dp)
-                                    .width(140.dp)
-                                    .scale(1f)
-                                    .clickable {
-                                        if (credits.value?.cast?.get(res)?.media_type == "movie") {
-                                            navController.navigate(
-                                                route = AppScreen.FilmID.route + "/" + credits.value?.cast?.get(
-                                                    res
-                                                )?.id
-                                            )
-                                        }
-                                        if (credits.value?.cast?.get(res)?.media_type == "tv") {
-                                            navController.navigate(
-                                                route = AppScreen.SerieID.route + "/" + credits.value?.cast?.get(
-                                                    res
-                                                )?.id
-                                            )
-                                        }
-                                    }
-                            )
-                        }
-                    }
-                }
+            if (!credits.value?.cast.isNullOrEmpty()){
+                credits.value?.let { KnowFor(images = images, credits = it, navController = navController) }
             }
         }
     }
@@ -293,4 +271,51 @@ fun TextInfoTitle(text : String){
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold
     )
+}
+@Composable
+fun KnowFor(images : List<String>, credits: KnownForResult, navController : NavController){
+    TextInfoTitle(text = "Conocido por")
+    LazyRow(modifier = Modifier.fillMaxSize()) {
+        items(images.size){ res ->
+            Card(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = colorResource(id = R.color.lateral_menu)
+                ),
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(images[res])
+                            .crossfade(true)
+                            .scale(Scale.FIT)
+                            .build(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .height(210.dp)
+                            .width(140.dp)
+                            .scale(1f)
+                            .clickable {
+                                if (credits.cast.get(res).media_type == "movie") {
+                                    navController.navigate(
+                                        route = AppScreen.FilmID.route + "/" + credits.cast.get(
+                                            res
+                                        ).id
+                                    )
+                                }
+                                if (credits.cast.get(res).media_type == "tv") {
+                                    navController.navigate(
+                                        route = AppScreen.SerieID.route + "/" + credits.cast.get(
+                                            res
+                                        ).id
+                                    )
+                                }
+                            }
+                    )
+                }
+            }
+        }
+    }
 }

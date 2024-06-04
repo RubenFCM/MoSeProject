@@ -1,4 +1,4 @@
-package com.example.moseproject.ui.view
+package com.example.moseproject.ui.view.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -25,15 +25,15 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
-import com.example.moseproject.data.model.FilmResult
 import com.example.moseproject.R
+import com.example.moseproject.data.model.SerieResult
 import com.example.moseproject.data.utils.Constants
 import com.example.moseproject.navigation.AppScreen
 
 @Composable
-fun RowListFilm(films :List<FilmResult>,navController: NavController){
+fun RowListSeries(series :List<SerieResult>, navController: NavController) {
     // Formatear el valor de la puntuación
-    val ratings = films.map { rating ->
+    val ratings = series.map { rating ->
         val voteAverage = rating.results[0].vote_average
         val formattedRating = if(voteAverage == 0.0){
             "n/a"
@@ -45,7 +45,7 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
         formattedRating
     }
     LazyRow(modifier = Modifier.fillMaxSize()) {
-        items(films.size){ film ->
+        items(series.size) { serie ->
             Card(
                 modifier = Modifier
                     .width(240.dp)
@@ -53,7 +53,7 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
                     .padding(horizontal = 4.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.Transparent
-                ),
+                )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     Card(
@@ -61,28 +61,28 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
                         colors = CardDefaults.cardColors(
                             containerColor = Color.Transparent
                         )
-                    ){
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(Constants.BASE_URL_IMAGES_W220 + films[film].results[0].poster_path)
-                                .crossfade(true)
-                                .scale(Scale.FIT)
-                                .build(),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .height(280.dp)
-                                .width(240.dp)
-                                .scale(1.2f, 1f)
-                                .clickable { navController.navigate(route = AppScreen.FilmID.route + "/" + films[film].results[0].id) }
-                        )
+                    ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(Constants.BASE_URL_IMAGES_W220+series[serie].results[0].poster_path)
+                                    .crossfade(true)
+                                    .scale(Scale.FIT)
+                                    .build(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .height(280.dp)
+                                    .width(240.dp)
+                                    .scale(1.2f, 1f)
+                                    .clickable { navController.navigate( route = AppScreen.SerieID.route+ "/" + series[serie].results[0].id) }
+                            )
                     }
 
                     Row() {
                         Text(
-                            text = films[film].results[0].title,
+                            text = series[serie].results[0].name,
                             color = Color.White,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold ,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier
                                 .width(180.dp)
                                 .height(90.dp)
@@ -90,7 +90,7 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
                             textAlign = TextAlign.Left
                         )
                         Text(
-                            text = ratings[film],
+                            text = ratings[serie],
                             color = colorResource(id = R.color.rating),
                             modifier = Modifier
                                 .padding(top = 34.dp),
@@ -100,7 +100,7 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
                         )
                     }
                     Text(
-                        text = films[film].results[0].release_date,
+                        text = series[serie].results[0].first_air_date,
                         modifier = Modifier
                             .padding(start = 4.dp),
                         color = Color.White,
@@ -112,5 +112,3 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
         }
     }
 }
-
-

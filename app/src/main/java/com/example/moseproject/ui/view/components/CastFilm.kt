@@ -1,4 +1,4 @@
-package com.example.moseproject.ui.view
+package com.example.moseproject.ui.view.components
 
 
 import androidx.compose.foundation.layout.Column
@@ -15,7 +15,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moseproject.data.utils.Constants
 import com.example.moseproject.data.utils.ScreenType
-import com.example.moseproject.ui.view.components.CreditsRowList
 import com.example.moseproject.ui.viewmodel.CreditsFilmViewModel
 
 @Composable

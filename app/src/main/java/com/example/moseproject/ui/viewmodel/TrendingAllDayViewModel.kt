@@ -39,7 +39,6 @@ class TrendingAllDayViewModel : ViewModel(){
         }finally {
             _isLoading.value = false
         }
-
     }
     private val _allPlus = MutableStateFlow<List<ResultAll>>(emptyList())
     val  allPlus : StateFlow<List<ResultAll>> get() = _allPlus

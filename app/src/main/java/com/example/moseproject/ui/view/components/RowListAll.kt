@@ -1,4 +1,4 @@
-package com.example.moseproject.ui.view
+package com.example.moseproject.ui.view.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column

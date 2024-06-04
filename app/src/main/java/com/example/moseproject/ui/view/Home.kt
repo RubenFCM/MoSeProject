@@ -1,10 +1,7 @@
 package com.example.moseproject.ui.view
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -13,8 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -22,6 +17,7 @@ import com.example.moseproject.data.utils.Constants
 import com.example.moseproject.data.utils.ScreenType
 import com.example.moseproject.ui.view.components.CarouselCard
 import com.example.moseproject.ui.view.components.LateralMenu
+import com.example.moseproject.ui.view.components.RowListAll
 import com.example.moseproject.ui.view.components.TitleRow
 import com.example.moseproject.ui.view.components.Topbar
 import com.example.moseproject.ui.viewmodel.TrendingAllDayViewModel

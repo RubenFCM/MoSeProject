@@ -1,19 +1,10 @@
 package com.example.moseproject.ui.view
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -24,9 +15,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.moseproject.data.utils.Constants
 import com.example.moseproject.data.utils.ScreenType
-import com.example.moseproject.navigation.AppScreen
 import com.example.moseproject.ui.view.components.CarouselCard
 import com.example.moseproject.ui.view.components.LateralMenu
+import com.example.moseproject.ui.view.components.RowListSeries
 import com.example.moseproject.ui.view.components.TitleRow
 import com.example.moseproject.ui.view.components.Topbar
 import com.example.moseproject.ui.viewmodel.AiringTodayViewModel

@@ -25,16 +25,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.moseproject.R
 import com.example.moseproject.data.model.ProductionCompany
 import com.example.moseproject.data.utils.ScreenType
+import com.example.moseproject.navigation.AppScreen
 import com.example.moseproject.ui.view.components.BackImage
+import com.example.moseproject.ui.view.components.Cast
 import com.example.moseproject.ui.view.components.Companies
 import com.example.moseproject.ui.view.components.ImageOnImage
-import com.example.moseproject.ui.view.components.Progress
 import com.example.moseproject.ui.view.components.RecomendationsFilm
 import com.example.moseproject.ui.view.components.TitleOnImage
 import com.example.moseproject.ui.view.components.VideoPlayerExo
@@ -86,16 +89,36 @@ fun DataFilm(navController: NavController, id : String?){
                         .fillMaxWidth()
                 ){
                     BackImage(image = film.value?.backdrop_path.toString())
-                    IconButton(
-                        onClick = { navController.popBackStack() },
-                        modifier = Modifier
-                            .absoluteOffset(x = 4.dp, y = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ){
+                        IconButton(
+                            onClick = { navController.popBackStack() },
+                            modifier = Modifier
+                                .absoluteOffset(x = 4.dp, y = 6.dp)
+                        ) {
+
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = Color.White
+                            )
+
+                        }
+                        IconButton(
+                            onClick = { navController.navigate(route = AppScreen.FilmScreen.route) },
+                            modifier = Modifier
+                                .absoluteOffset(y = 6.dp)
+                        ) {
+
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_lateral_film) ,
+                                contentDescription = "Volver a pantalla de películas",
+                                tint = Color.White
+                            )
+
+                        }
                     }
                     TitleOnImage(title = film.value?.title.toString())
                     ImageOnImage(image = film.value?.poster_path.toString())
