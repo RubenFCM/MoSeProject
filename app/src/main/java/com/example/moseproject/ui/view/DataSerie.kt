@@ -120,7 +120,7 @@ fun DataSerie(navController: NavController, id : String?){
                         }
                     }
 
-                    TitleOnImage(title = serie.value?.name.toString())
+                    TitleOnImage(title = serie.value?.name?.let { it.toString() } ?: "n/a")
                     ImageOnImage(image = serie.value?.poster_path.toString())
                 }
                 Column( modifier = Modifier
@@ -128,9 +128,9 @@ fun DataSerie(navController: NavController, id : String?){
                     .padding(bottom = 12.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ){
-                    Text(text = "Estrenada: " + serie.value?.first_air_date.toString() +" (ES)" , color = Color.White)
-                    Text(text = "Origen: " + serie.value?.production_countries?.get(0)?.name.toString(), color = Color.White)
-                    Text(text = "Puntuación: " + serie.value?.vote_average?.toString(), color = Color.White)
+                    Text(text = "Estrenada: " + (serie.value?.first_air_date?.let { it.toString() } ?: "n/a") + " (ES)" , color = Color.White)
+                    Text(text = "Origen: " + (serie.value?.production_countries?.get(0)?.name?.let { it.toString() } ?: "n/a"), color = Color.White)
+                    Text(text = "Puntuación: " + (serie.value?.vote_average?.let { it.toString()} ?: "n/a" ), color = Color.White)
                     if (serie.value?.status == "Returning Series"){
                         Text(text = "Estado: Volverá a emitirse", color = Color.White)
                     }else{
@@ -164,13 +164,15 @@ fun DataSerie(navController: NavController, id : String?){
                     }
                 }
             }
-            item {
-                Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
-                Column {
-                    Text(text = serie.value?.name.toString() , modifier = Modifier.padding(bottom = 6.dp), color = Color.White)
-                    Text(text = serie.value?.overview.toString(), color = Color.LightGray)
+            if (serie.value?.name?.let { it.toString() } != null){
+                item {
+                    Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
+                    Column {
+                        Text(text = serie.value?.name.toString() , modifier = Modifier.padding(bottom = 6.dp), color = Color.White)
+                        Text(text = serie.value?.overview.toString(), color = Color.LightGray)
+                    }
+                    Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
                 }
-                Divider(modifier = Modifier.padding(vertical = 6.dp), color = Color.LightGray, thickness = 2.dp)
             }
             if (key != ""){
                 item {

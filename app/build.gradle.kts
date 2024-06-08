@@ -59,10 +59,6 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
     implementation("com.squareup.retrofit2:converter-gson:$retrofitVersion")
 
-    /* INTERCEPTOR */
-    implementation("com.squareup.okhttp3:okhttp:$interceptorVersion")
-    implementation("com.squareup.okhttp3:logging-interceptor:$interceptorVersion")
-
     /*Carousel Card Slider*/
     implementation("com.google.accompanist:accompanist-pager:0.20.0")
     implementation("androidx.compose.ui:ui-util:1.6.7")
