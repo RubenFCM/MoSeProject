@@ -128,8 +128,12 @@ fun DataSerie(navController: NavController, id : String?){
                     .padding(bottom = 12.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ){
-                    Text(text = "Estrenada: " + (serie.value?.first_air_date?.let { it.toString() } ?: "n/a") + " (ES)" , color = Color.White)
-                    Text(text = "Origen: " + (serie.value?.production_countries?.get(0)?.name?.let { it.toString() } ?: "n/a"), color = Color.White)
+                    Text(text = "Estrenada: " + (serie.value?.first_air_date?.let { it.toString() }  ?: "n/a") + " (ES)" , color = Color.White)
+                    if (serie.value?.production_countries?.isEmpty() != true){
+                        Text(text = "Origen: " + serie.value?.production_countries?.get(0)?.name, color = Color.White)
+                    }else{
+                        Text(text = "Origen: n/a", color = Color.White)
+                    }
                     Text(text = "Puntuación: " + (serie.value?.vote_average?.let { it.toString()} ?: "n/a" ), color = Color.White)
                     if (serie.value?.status == "Returning Series"){
                         Text(text = "Estado: Volverá a emitirse", color = Color.White)
