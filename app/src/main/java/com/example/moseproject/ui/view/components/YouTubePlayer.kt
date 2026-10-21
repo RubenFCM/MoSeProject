@@ -3,7 +3,7 @@ package com.example.moseproject.ui.view.components
 import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -39,8 +39,8 @@ fun VideoPlayerExo(videoUrl: String, lifecycleOwner: LifecycleOwner) {
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
                     .padding(8.dp)
+                    .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(16.dp)),
                 factory = {
                     YouTubePlayerView(context).apply {

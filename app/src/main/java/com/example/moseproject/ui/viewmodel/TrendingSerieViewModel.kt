@@ -22,17 +22,26 @@ class TrendingSerieViewModel :ViewModel() {
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getSeriesTrending(){
+        _isLoading.value = true
         viewModelScope.launch {
-            val series = service.listTrendigSeries(Constants.API_KEY,1)
-            val allResult = series.results.map { result ->
-                SerieResult(
-                    page = series.page,
-                    results = listOf(result),
-                    total_pages = series.total_pages,
-                    total_results = series.total_results
-                )
+            try {
+                val series = service.listTrendigSeries(Constants.API_KEY,1)
+                val allResult = series.results.map { result ->
+                    SerieResult(
+                        page = series.page,
+                        results = listOf(result),
+                        total_pages = series.total_pages,
+                        total_results = series.total_results
+                    )
+                }
+                _listSeries.value = allResult
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
-            _listSeries.value = allResult
         }
     }
 

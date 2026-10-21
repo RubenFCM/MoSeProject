@@ -22,9 +22,16 @@ class PopularFilmViewModel :ViewModel(){
 
     fun getImagesFilmsPopular(){
         viewModelScope.launch {
-            val films = service.listPopularMovies(Constants.API_KEY)
-            val img = films.results.map { Constants.BASE_URL_IMAGES_W500 + it.poster_path }
-            _listImages.value = img
+            try {
+                val films = service.listPopularMovies(Constants.API_KEY)
+                _films.value = films.results.map { films.copy(results = listOf(it)) }
+                val img = films.results.map { Constants.BASE_URL_IMAGES_W500 + it.poster_path }
+                _listImages.value = img
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }

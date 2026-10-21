@@ -22,17 +22,26 @@ class AiringTodayViewModel :ViewModel(){
     // Almacenar lista de peliculas Próximos estrenos, ordenada por fecha de estreno
 
     fun getSeriesToday(){
+        _isLoading.value = true
         viewModelScope.launch {
-            val seriesToday = service.listTodaySeries(Constants.API_KEY,1)
-            val seriesResult = seriesToday.results.map { result ->
-                SerieResult(
-                    page = seriesToday.page,
-                    results = listOf(result),
-                    total_pages = seriesToday.total_pages,
-                    total_results = seriesToday.total_results
-                )
+            try {
+                val seriesToday = service.listTodaySeries(Constants.API_KEY,1)
+                val seriesResult = seriesToday.results.map { result ->
+                    SerieResult(
+                        page = seriesToday.page,
+                        results = listOf(result),
+                        total_pages = seriesToday.total_pages,
+                        total_results = seriesToday.total_results
+                    )
+                }
+                _series.value = seriesResult
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
-            _series.value = seriesResult
         }
     }
 

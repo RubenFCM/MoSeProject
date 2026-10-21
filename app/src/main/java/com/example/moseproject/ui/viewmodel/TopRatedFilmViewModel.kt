@@ -20,17 +20,26 @@ class TopRatedFilmViewModel :ViewModel() {
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> get() = _isLoading
     fun getFilmsTopRated(){
+        _isLoading.value = true
         viewModelScope.launch {
-            val filmsTopRated = service.listTopRatedFilms(Constants.API_KEY,1)
-            val filmResults = filmsTopRated.results.map { result ->
-                FilmResult(
-                    page = filmsTopRated.page,
-                    results = listOf(result),
-                    total_pages = filmsTopRated.total_pages,
-                    total_results = filmsTopRated.total_results
-                )
+            try {
+                val filmsTopRated = service.listTopRatedFilms(Constants.API_KEY,1)
+                val filmResults = filmsTopRated.results.map { result ->
+                    FilmResult(
+                        page = filmsTopRated.page,
+                        results = listOf(result),
+                        total_pages = filmsTopRated.total_pages,
+                        total_results = filmsTopRated.total_results
+                    )
+                }
+                _films.value = filmResults
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
-            _films.value = filmResults
         }
 
     }
