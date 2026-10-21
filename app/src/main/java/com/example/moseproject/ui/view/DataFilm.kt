@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -56,10 +57,12 @@ fun DataFilm(navController: NavController, id : String?){
     var videoViewModel : VideoViewModel = viewModel()
     var recomendationsFilmViewModel : RecomendationsViewModel = viewModel()
 
-    if (id != null) {
-        filmIdViewModel.getFilmById(id)
-        videoViewModel.getVideoFilmById(id)
-        recomendationsFilmViewModel.getRecomendationsFilm(id)
+    LaunchedEffect(id) {
+        if (id != null) {
+            filmIdViewModel.getFilmById(id)
+            videoViewModel.getVideoFilmById(id)
+            recomendationsFilmViewModel.getRecomendationsFilm(id)
+        }
     }
 
     val film = filmIdViewModel.film.collectAsState()
@@ -71,13 +74,7 @@ fun DataFilm(navController: NavController, id : String?){
     }
 
     val video = videoViewModel.video.collectAsState()
-    var key = ""
-    if (video.value != null){
-        val videoSpanish = video.value?.results?.map { key ->
-            key.key
-        }
-        key = videoSpanish?.get(0).toString()
-    }
+    val key = video.value?.results?.firstOrNull()?.key.orEmpty()
 
     val recomendations by recomendationsFilmViewModel.films.collectAsState(initial = emptyList())
 

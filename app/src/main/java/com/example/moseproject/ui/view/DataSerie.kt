@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -56,10 +57,12 @@ fun DataSerie(navController: NavController, id : String?){
     val videoViewModel : VideoViewModel = viewModel()
     val recomendationsSerieViewModel : RecomendationsViewModel = viewModel()
 
-    if (id != null){
-        serieIdViewModel.getSerieById(id)
-        videoViewModel.getVideoSerieById(id)
-        recomendationsSerieViewModel.getRecomendationsSerie(id)
+    LaunchedEffect(id) {
+        if (id != null) {
+            serieIdViewModel.getSerieById(id)
+            videoViewModel.getVideoSerieById(id)
+            recomendationsSerieViewModel.getRecomendationsSerie(id)
+        }
     }
 
     val serie = serieIdViewModel.serie.collectAsState()
@@ -73,13 +76,7 @@ fun DataSerie(navController: NavController, id : String?){
     }
 
     val video = videoViewModel.video.collectAsState()
-    var key = ""
-    if (video.value != null){
-        val videoSpanish = video.value?.results?.map { key ->
-            key.key
-        }
-        key = videoSpanish?.get(0).toString()
-    }
+    val key = video.value?.results?.firstOrNull()?.key.orEmpty()
 
     val recomendations by recomendationsSerieViewModel.series.collectAsState(initial= emptyList())
 
