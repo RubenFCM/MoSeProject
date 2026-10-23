@@ -1,5 +1,6 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaText
 import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -82,7 +83,7 @@ fun VideoPlayerExo(videoUrl: String, lifecycleOwner: LifecycleOwner) {
         if (playbackFailed) {
             Text(
                 "YouTube no permite reproducir este vídeo aquí.",
-                color = Color.White,
+                color = CinemaText,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
             TextButton(onClick = {

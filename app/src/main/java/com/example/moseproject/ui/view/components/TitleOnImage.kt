@@ -1,5 +1,6 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaText
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
@@ -14,7 +15,7 @@ import androidx.compose.ui.unit.sp
 fun TitleOnImage(title:String){
     Text(
         text = title,
-        color = Color.White,
+        color = CinemaText,
         modifier = Modifier
             .absoluteOffset(x = 4.dp, y = 140.dp)
             .width(210.dp),

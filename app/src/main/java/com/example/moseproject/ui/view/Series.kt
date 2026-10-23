@@ -32,7 +32,7 @@ fun Series(navController: NavController) {
         if (loading && topItems.isEmpty()) Progress(Modifier.padding(padding))
         else if (trendingItems.isEmpty() && todayItems.isEmpty() && topItems.isEmpty())
             EmptyState("No hemos podido cargar las series", "Comprueba tu conexión y vuelve a abrir esta pantalla.", Modifier.padding(padding))
-        else LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 28.dp)) {
+        else LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 28.dp + LocalCinemaNavigationClearance.current)) {
             item { ScreenIntro("Un capítulo más", "Imposible\nquedarse en uno.", "Descubre las series de las que todo el mundo habla.") }
             trendingItems.firstOrNull()?.let { featured -> item { FeaturedCard(featured, navController, "SERIE DESTACADA") } }
             item { SectionHeading("Nuevos capítulos") { navController.navigate(AppScreen.SeriesToday.route) } }

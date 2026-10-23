@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MoSeProject" parent="android:Theme.Material.Light.NoActionBar.Fullscreen" />
+    <style name="Theme.MoSeProject" parent="android:Theme.Material.Light.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/cinema_background</item>
+        <item name="android:colorBackground">@color/cinema_background</item>
+        <item name="android:colorBackgroundFloating">@color/cinema_surface</item>
+        <item name="android:statusBarColor">@color/cinema_background</item>
+        <item name="android:navigationBarColor">@color/cinema_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:colorAccent">@color/cinema_accent</item>
+        <item name="android:colorControlNormal">@color/cinema_text_secondary</item>
+        <item name="android:colorControlActivated">@color/cinema_accent</item>
+        <item name="android:colorControlHighlight">@color/cinema_selection</item>
+        <item name="android:textColorPrimary">@color/cinema_text</item>
+        <item name="android:textColorSecondary">@color/cinema_text_secondary</item>
+    </style>
 </resources>

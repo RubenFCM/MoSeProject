@@ -33,7 +33,7 @@ fun Home(navController: NavController) {
         } else if (weekItems.isEmpty() && dayItems.isEmpty()) {
             EmptyState("No hemos podido cargar el catálogo", "Comprueba tu conexión y vuelve a abrir esta pantalla.", Modifier.padding(padding))
         } else {
-            LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 28.dp)) {
+            LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 28.dp + LocalCinemaNavigationClearance.current)) {
                 item { ScreenIntro("El cine empieza aquí", "Tu próxima\ngran historia.", "Películas, series y las personas que las hacen posibles.") }
                 item {
                     Row(Modifier.padding(horizontal = 20.dp).padding(bottom = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

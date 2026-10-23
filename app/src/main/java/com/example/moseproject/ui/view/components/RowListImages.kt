@@ -1,5 +1,6 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaSurface
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -41,7 +41,7 @@ fun RecomendationsFilm(navController: NavController, data: List<FilmResult>) {
                         .fillMaxSize()
                         .padding(horizontal = 4.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = colorResource(id = R.color.lateral_menu)
+                        containerColor = CinemaSurface
                     ),
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
@@ -83,7 +83,7 @@ fun RecomendationsSerie(navController: NavController, data: List<SerieResult>) {
                         .fillMaxSize()
                         .padding(horizontal = 4.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = colorResource(id = R.color.lateral_menu)
+                        containerColor = CinemaSurface
                     ),
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {

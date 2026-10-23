@@ -56,8 +56,8 @@ dependencies {
     val viewModelVersion = "2.7.0"
 
     /* RETROFIT */
-    implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
-    implementation("com.squareup.retrofit2:converter-gson:$retrofitVersion")
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
 
     /*Carousel Card Slider*/
     implementation("com.google.accompanist:accompanist-pager:0.20.0")

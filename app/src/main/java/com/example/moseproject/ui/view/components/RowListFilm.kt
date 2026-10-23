@@ -1,5 +1,8 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaText
+import com.example.moseproject.ui.theme.CinemaRating
+import com.example.moseproject.ui.theme.CinemaMuted
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -80,7 +82,7 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
                     Row() {
                         Text(
                             text = films[film].results[0].title,
-                            color = Color.White,
+                            color = CinemaText,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold ,
                             modifier = Modifier
@@ -91,7 +93,7 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
                         )
                         Text(
                             text = ratings[film],
-                            color = colorResource(id = R.color.rating),
+                            color = CinemaRating,
                             modifier = Modifier
                                 .padding(top = 34.dp),
                             textAlign = TextAlign.End,
@@ -103,7 +105,7 @@ fun RowListFilm(films :List<FilmResult>,navController: NavController){
                         text = films[film].results[0].release_date,
                         modifier = Modifier
                             .padding(start = 4.dp),
-                        color = Color.White,
+                        color = CinemaMuted,
                         textAlign = TextAlign.End,
                         fontSize = 18.sp,
                     )

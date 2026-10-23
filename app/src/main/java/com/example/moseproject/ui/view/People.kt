@@ -22,7 +22,7 @@ fun People(navController: NavController) {
         else if (people.isEmpty()) EmptyState("Sin personas disponibles", "Comprueba tu conexión y vuelve a intentarlo.", Modifier.padding(padding))
         else LazyVerticalGrid(
             columns = GridCells.Adaptive(140.dp), modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp + LocalCinemaNavigationClearance.current),
             horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {

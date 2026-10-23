@@ -1,5 +1,6 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
@@ -37,7 +38,7 @@ fun Topbar(title:String, navController: NavController,screenType: ScreenType,dra
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent,
-            titleContentColor = Color.White,
+            titleContentColor = CinemaText,
         ),
         title = {
             Text(
@@ -56,7 +57,7 @@ fun Topbar(title:String, navController: NavController,screenType: ScreenType,dra
                 Icon(
                     imageVector = Icons.Filled.Menu,
                     contentDescription = "Localized description",
-                    tint = Color.White
+                    tint = CinemaText
                 )
             }
         },
@@ -67,7 +68,7 @@ fun Topbar(title:String, navController: NavController,screenType: ScreenType,dra
                     Icon(
                         imageVector = Icons.Default.ExitToApp ,
                         contentDescription ="Salir",
-                        tint = Color.White )
+                        tint = CinemaText )
                 }
             }else{
                 IconButton(onClick = {
@@ -88,7 +89,7 @@ fun Topbar(title:String, navController: NavController,screenType: ScreenType,dra
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Localized description",
-                        tint = Color.White
+                        tint = CinemaText
                     )
                 }
             }

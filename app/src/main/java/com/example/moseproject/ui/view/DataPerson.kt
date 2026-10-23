@@ -43,7 +43,7 @@ fun DataPerson(navController: NavController, id: String?) {
         if (data == null) {
             if (loading) Progress(Modifier.padding(padding))
             else EmptyState("Perfil no disponible", "Comprueba tu conexión y vuelve a intentarlo.", Modifier.padding(padding))
-        } else LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 32.dp)) {
+        } else LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 32.dp + LocalCinemaNavigationClearance.current)) {
             item {
                 Row(Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     AsyncImage(imageUrl(data.profile_path), data.name, Modifier.width(112.dp).height(168.dp)

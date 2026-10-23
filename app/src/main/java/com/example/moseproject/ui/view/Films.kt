@@ -32,7 +32,7 @@ fun Films(navController: NavController) {
         if (loading && topItems.isEmpty()) Progress(Modifier.padding(padding))
         else if (popularItems.isEmpty() && upcomingItems.isEmpty() && topItems.isEmpty())
             EmptyState("No hemos podido cargar las películas", "Comprueba tu conexión y vuelve a abrir esta pantalla.", Modifier.padding(padding))
-        else LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 28.dp)) {
+        else LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 28.dp + LocalCinemaNavigationClearance.current)) {
             item { ScreenIntro("En pantalla grande", "Historias que\ndejan huella.", "Estrenos, grandes clásicos y tu próxima película favorita.") }
             popularItems.firstOrNull()?.let { featured -> item { FeaturedCard(featured, navController, "PELÍCULA DESTACADA") } }
             item { SectionHeading("Próximamente") { navController.navigate(AppScreen.UpcomingFilm.route) } }

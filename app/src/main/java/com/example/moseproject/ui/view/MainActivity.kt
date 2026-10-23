@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.moseproject.navigation.AppNavigation
 import com.example.moseproject.ui.theme.MoSeProjectTheme
+import com.example.moseproject.ui.view.components.CinemaNavigationAnimation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,7 +17,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             MoSeProjectTheme {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AppNavigation()
+                    CinemaNavigationAnimation {
+                        AppNavigation()
+                    }
                 }
             }
         }

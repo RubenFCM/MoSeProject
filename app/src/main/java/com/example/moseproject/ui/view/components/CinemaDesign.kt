@@ -20,7 +20,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,7 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.moseproject.navigation.AppScreen
-import com.example.moseproject.R
 import com.example.moseproject.ui.theme.*
 import java.util.Locale
 
@@ -56,6 +56,9 @@ fun imageUrl(path: String?, backdrop: Boolean = false): String? =
         if (it.startsWith("http")) it else "https://image.tmdb.org/t/p/" + (if (backdrop) "w780" else "w500") + it
     }
 
+// Trailing space inside scrollable content; it never reduces the viewport height.
+internal val LocalCinemaNavigationClearance = staticCompositionLocalOf { 0.dp }
+
 @Composable
 fun CinemaScaffold(
     navController: NavController,
@@ -65,67 +68,74 @@ fun CinemaScaffold(
     back: Boolean = false,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    Scaffold(
-        containerColor = CinemaBackground,
-        topBar = {
-            Row(
-                Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (back) {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, "Volver", tint = CinemaText)
+    val density = LocalDensity.current
+    var navigationHeight by remember { mutableStateOf(0.dp) }
+    val fadeHeight = maxOf(136.dp, navigationHeight)
+
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = CinemaBackground,
+            // The overlay handles the bottom system inset once, in CinemaBottomNavigation.
+            contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+            topBar = {
+                Row(
+                    Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (back) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, "Volver", tint = CinemaText)
+                        }
+                    } else {
+                        Box(Modifier.size(36.dp).clip(RoundedCornerShape(12.dp)).background(CinemaAccent), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.PlayArrow, null, tint = CinemaBackground, modifier = Modifier.size(23.dp))
+                        }
+                        Spacer(Modifier.width(10.dp))
                     }
-                } else {
-                    Box(Modifier.size(36.dp).clip(RoundedCornerShape(12.dp)).background(CinemaAccent), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.PlayArrow, null, tint = CinemaBackground, modifier = Modifier.size(23.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(if (back) "EXPLORA CINEVERSE" else "CINEVERSE", style = MaterialTheme.typography.labelSmall, color = CinemaAccent)
+                        Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Spacer(Modifier.width(10.dp))
+                    if (searchRoute != null) {
+                        IconButton(onClick = { navController.navigate(searchRoute) }, modifier = Modifier.clip(CircleShape).background(CinemaSurface)) {
+                            Icon(Icons.Default.Search, "Buscar", tint = CinemaText)
+                        }
+                    }
                 }
-                Column(Modifier.weight(1f)) {
-                    Text(if (back) "EXPLORA CINEVERSE" else "CINEVERSE", style = MaterialTheme.typography.labelSmall, color = CinemaAccent)
-                    Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            },
+            content = { padding ->
+                CompositionLocalProvider(LocalCinemaNavigationClearance provides (fadeHeight + 12.dp)) {
+                    content(padding)
                 }
-                if (searchRoute != null) {
-                    IconButton(onClick = { navController.navigate(searchRoute) }, modifier = Modifier.clip(CircleShape).background(CinemaSurface)) {
-                        Icon(Icons.Default.Search, "Buscar", tint = CinemaText)
+            }
+        )
+        // No pointer input: scrolling passes through this purely visual layer.
+        Box(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(fadeHeight)
+                .background(Brush.verticalGradient(
+                    0f to CinemaBackground.copy(alpha = 0f),
+                    .3f to CinemaBackground.copy(alpha = .18f),
+                    .65f to CinemaBackground.copy(alpha = .72f),
+                    1f to CinemaBackground
+                ))
+        )
+        CinemaBottomNavigation(
+            modifier = Modifier.align(Alignment.BottomCenter).onSizeChanged {
+                navigationHeight = with(density) { it.height.toDp() }
+            },
+            selectedRoute = selected,
+            onDestinationSelected = { route ->
+                if (selected != route || back) {
+                    navController.navigate(route) {
+                        popUpTo(AppScreen.HomeScreen.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 }
             }
-        },
-        bottomBar = {
-            NavigationBar(containerColor = CinemaBackground, tonalElevation = 0.dp) {
-                val tabs = listOf(
-                    Triple(AppScreen.HomeScreen.route, "Inicio", R.drawable.ic_lateral_home),
-                    Triple(AppScreen.FilmScreen.route, "Películas", R.drawable.ic_lateral_film),
-                    Triple(AppScreen.SerieScreen.route, "Series", R.drawable.ic_lateral_serie),
-                    Triple(AppScreen.PeopleScreen.route, "Personas", R.drawable.ic_people)
-                )
-                tabs.forEach { (route, label, icon) ->
-                    NavigationBarItem(
-                        selected = selected == route,
-                        onClick = {
-                            if (selected != route || back) {
-                                navController.navigate(route) {
-                                    popUpTo(AppScreen.HomeScreen.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        },
-                        icon = { Icon(painterResource(icon), null, modifier = Modifier.size(22.dp)) },
-                        label = { Text(label, style = MaterialTheme.typography.labelLarge) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = CinemaAccent, selectedTextColor = CinemaAccent,
-                            indicatorColor = CinemaElevated,
-                            unselectedIconColor = CinemaMuted, unselectedTextColor = CinemaMuted
-                        )
-                    )
-                }
-            }
-        },
-        content = content
-    )
+        )
+    }
 }
 
 @Composable
@@ -154,7 +164,7 @@ fun SectionHeading(title: String, action: (() -> Unit)? = null) {
 fun RatingBadge(rating: Double) {
     Surface(color = CinemaBackground.copy(alpha = .88f), shape = RoundedCornerShape(8.dp)) {
         Row(Modifier.padding(horizontal = 7.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Star, null, Modifier.size(12.dp), tint = Color(0xFFFFCF70))
+            Icon(Icons.Default.Star, null, Modifier.size(12.dp), tint = CinemaRating)
             Spacer(Modifier.width(4.dp))
             Text(if (rating > 0) String.format(Locale("es"), "%.1f", rating) else "—", style = MaterialTheme.typography.labelLarge, color = CinemaText)
         }
@@ -191,7 +201,8 @@ fun PosterGrid(items: List<CinemaItem>, navController: NavController, modifier: 
     } else {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(140.dp), modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(20.dp),
+            contentPadding = PaddingValues(start = 20.dp, top = 20.dp, end = 20.dp,
+                bottom = 20.dp + LocalCinemaNavigationClearance.current),
             horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             items(items, key = { it.kind + it.id }) { item -> PosterCard(item, navController) }
@@ -205,7 +216,7 @@ fun FeaturedCard(item: CinemaItem, navController: NavController, label: String =
         .background(CinemaSurface).clickable { navController.navigate(item.route) }) {
         AsyncImage(imageUrl(item.backdrop ?: item.image, true), item.title, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-            0f to Color.Transparent, .35f to CinemaBackground.copy(alpha = .1f), 1f to Color(0xFF08090D))))
+            0f to Color.Transparent, .35f to CinemaBackground.copy(alpha = .1f), 1f to CinemaBackground)))
         Surface(Modifier.align(Alignment.TopStart).padding(18.dp), color = CinemaBackground.copy(alpha = .8f), shape = RoundedCornerShape(8.dp)) {
             Text(label, Modifier.padding(horizontal = 10.dp, vertical = 7.dp), style = MaterialTheme.typography.labelSmall, color = CinemaText)
         }

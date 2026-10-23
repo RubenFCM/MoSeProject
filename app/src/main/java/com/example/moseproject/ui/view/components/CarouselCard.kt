@@ -1,5 +1,8 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaMuted
+import com.example.moseproject.ui.theme.CinemaBackground
+import com.example.moseproject.ui.theme.CinemaAccent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +43,7 @@ import kotlin.math.absoluteValue
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun CarouselCard(list: List<String>){
+    val maskColor = CinemaBackground
 
     val pagerState = rememberPagerState(initialPage = 0)
 
@@ -98,8 +102,8 @@ fun CarouselCard(list: List<String>){
                             drawContent()
                             val colors = listOf(
                                 Color.Transparent,
-                                Color.Black,
-                                Color.Black,
+                                maskColor,
+                                maskColor,
                                 Color.Transparent
                             )
 //                                    val brush = Brush.horizontalGradient(
@@ -128,7 +132,7 @@ fun CarouselCard(list: List<String>){
         ){
             repeat(slideUrls.size){it->
                 val color =
-                    if (pagerState.currentPage == it) Color.White else Color.Gray
+                    if (pagerState.currentPage == it) CinemaAccent else CinemaMuted
                 Box(
                     modifier = Modifier
                         .padding(2.dp)

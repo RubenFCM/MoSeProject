@@ -5,41 +5,53 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val CinemaColors = darkColorScheme(
+@Composable
+private fun cinemaColors() = darkColorScheme(
     primary = CinemaAccent,
-    onPrimary = Color(0xFF062B2B),
-    primaryContainer = Color(0xFF163C40),
+    onPrimary = CinemaBackground,
+    primaryContainer = CinemaSelection,
     onPrimaryContainer = CinemaAccent,
     secondary = CinemaAccent,
-    secondaryContainer = CinemaElevated,
+    onSecondary = CinemaBackground,
+    secondaryContainer = CinemaSelection,
     onSecondaryContainer = CinemaAccent,
+    tertiary = CinemaAccent,
+    onTertiary = CinemaBackground,
+    tertiaryContainer = CinemaSelection,
+    onTertiaryContainer = CinemaAccent,
     background = CinemaBackground,
     onBackground = CinemaText,
     surface = CinemaSurface,
     onSurface = CinemaText,
     surfaceVariant = CinemaElevated,
     onSurfaceVariant = CinemaMuted,
-    outline = CinemaOutline
+    surfaceTint = CinemaSurface,
+    inverseSurface = CinemaSurface,
+    inverseOnSurface = CinemaText,
+    inversePrimary = CinemaBackground,
+    outline = CinemaOutline,
+    outlineVariant = CinemaOutline,
+    scrim = CinemaBackground
 )
 
 @Composable
 fun MoSeProjectTheme(content: @Composable () -> Unit) {
+    val colors = cinemaColors()
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = CinemaBackground.toArgb()
-            window.navigationBarColor = CinemaBackground.toArgb()
+            window.statusBarColor = colors.background.toArgb()
+            window.navigationBarColor = colors.background.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = false
                 isAppearanceLightNavigationBars = false
             }
         }
     }
-    MaterialTheme(colorScheme = CinemaColors, typography = Typography, content = content)
+    MaterialTheme(colorScheme = colors, typography = Typography, content = content)
 }

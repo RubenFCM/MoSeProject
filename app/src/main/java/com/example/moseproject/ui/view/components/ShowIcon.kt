@@ -44,7 +44,7 @@ private fun OrganizationList(title: String, organizations: List<Pair<String, Str
 
 @Composable
 fun ShowIcon(icon: String?) {
-    Surface(shape = RoundedCornerShape(6.dp), color = Color.White) {
+    Surface(shape = RoundedCornerShape(6.dp), color = CinemaLogoBackground) {
         AsyncImage(imageUrl(icon), null, Modifier.width(60.dp).height(30.dp).padding(5.dp))
     }
 }

@@ -77,7 +77,8 @@ fun CinemaSearch(navController: NavController, kind: String) {
                 else -> {
                     Text("${items.size} resultados", Modifier.padding(horizontal = 22.dp, vertical = 10.dp),
                         style = MaterialTheme.typography.labelLarge, color = CinemaMuted)
-                    LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    LazyColumn(contentPadding = PaddingValues(start = 20.dp, top = 20.dp, end = 20.dp,
+                        bottom = 20.dp + LocalCinemaNavigationClearance.current), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         items(items, key = { it.kind + it.id }) { item ->
                             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(CinemaSurface)
                                 .clickable { navController.navigate(item.route) }.padding(12.dp),
