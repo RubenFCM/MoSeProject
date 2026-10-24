@@ -29,6 +29,8 @@ import coil.compose.AsyncImage
 import com.example.moseproject.navigation.AppScreen
 import com.example.moseproject.ui.theme.*
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import com.example.moseproject.R
 
 data class CinemaItem(
     val id: Int,
@@ -98,6 +100,9 @@ fun CinemaScaffold(
                         IconButton(onClick = { navController.navigate(searchRoute) }, modifier = Modifier.clip(CircleShape).background(CinemaSurface)) {
                             Icon(Icons.Default.Search, "Buscar", tint = CinemaText)
                         }
+                    }
+                    IconButton(onClick = { navController.navigate(AppScreen.Account.route) { launchSingleTop = true } }) {
+                        Icon(Icons.Default.AccountCircle, stringResource(R.string.auth_account), tint = CinemaText)
                     }
                 }
             },

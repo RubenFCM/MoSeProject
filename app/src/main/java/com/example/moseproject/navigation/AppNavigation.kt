@@ -23,11 +23,20 @@ import com.example.moseproject.ui.view.SearchFilm
 import com.example.moseproject.ui.view.SearchPerson
 import com.example.moseproject.ui.view.SearchSerie
 import com.example.moseproject.ui.view.Series
+import com.example.moseproject.ui.view.auth.AccountRoute
+import com.example.moseproject.ui.viewmodel.AuthViewModel
 
 @Composable
-fun AppNavigation(){
+fun AppNavigation(authViewModel: AuthViewModel){
     val navController = rememberNavController() // Gestiona el estado de la navegación entre pantallas
     NavHost(navController = navController, startDestination = AppScreen.HomeScreen.route ){
+        composable(AppScreen.Account.route) {
+            AccountRoute(authViewModel, onBrowse = {
+                if (!navController.popBackStack()) {
+                    navController.navigate(AppScreen.HomeScreen.route) { launchSingleTop = true }
+                }
+            })
+        }
 
         composable(route= AppScreen.HomeScreen.route){
             Home(navController)

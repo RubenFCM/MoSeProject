@@ -4,7 +4,7 @@ kotlin = "2.0.21"
 coreKtx = "1.13.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
-espressoCore = "3.5.1"
+espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.7.0"
 activityCompose = "1.9.0"
 composeBom = "2023.08.00"
@@ -20,8 +20,15 @@ youtubePlayer = "12.1.2"
 coroutinesTest = "1.6.4"
 mockk = "1.13.2"
 archCoreTesting = "2.1.0"
+firebaseBom = "34.1.0"
+googleServices = "4.4.3"
+coroutinesPlayServices = "1.7.3"
 
 [libraries]
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanist" }
 androidx-ui-util = { module = "androidx.compose.ui:ui-util", version.ref = "composeUiUtil" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutinesAndroid" }
@@ -60,4 +67,5 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 

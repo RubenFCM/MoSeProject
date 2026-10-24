@@ -4,6 +4,18 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// Public browsing remains buildable before a Firebase project has been configured.
+// Never generate replacement Firebase identifiers or a dummy google-services.json.
+if (listOf("google-services.json", "src/debug/google-services.json", "src/release/google-services.json")
+        .any { file(it).isFile }) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
+require(providers.gradleProperty("authPasswordMaxLength").orElse("4096").get().toInt() >=
+    providers.gradleProperty("authPasswordMinLength").orElse("6").get().toInt()) {
+    "authPasswordMaxLength must be greater than or equal to authPasswordMinLength"
+}
+
 android {
     namespace = "com.example.moseproject"
     compileSdk = 34
@@ -16,13 +28,32 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // These are public policy settings, not credentials. Match Firebase Console before release.
+        buildConfigField("int", "AUTH_PASSWORD_MIN_LENGTH", providers.gradleProperty("authPasswordMinLength").orElse("6").get().also {
+            require(it.toInt() in 6..30) { "authPasswordMinLength must be between 6 and 30" }
+        })
+        buildConfigField("int", "AUTH_PASSWORD_MAX_LENGTH", providers.gradleProperty("authPasswordMaxLength").orElse("4096").get().also {
+            require(it.toInt() in 6..4096) { "authPasswordMaxLength must be between 6 and 4096" }
+        })
+        listOf("LOWERCASE" to "authPasswordLowercase", "UPPERCASE" to "authPasswordUppercase",
+            "NUMBER" to "authPasswordNumber", "SYMBOL" to "authPasswordSymbol").forEach { (field, property) ->
+            buildConfigField("boolean", "AUTH_PASSWORD_REQUIRE_$field", providers.gradleProperty(property).orElse("false").get().also {
+                require(it == "true" || it == "false") { "$property must be true or false" }
+            })
+        }
         vectorDrawables {
             useSupportLibrary = true
         }
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "AUTH_USE_EMULATOR", providers.gradleProperty("firebaseAuthEmulator").orElse("false").get().also {
+                require(it == "true" || it == "false") { "firebaseAuthEmulator must be true or false" }
+            })
+        }
         release {
+            buildConfigField("boolean", "AUTH_USE_EMULATOR", "false")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -36,6 +67,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -51,6 +83,10 @@ kotlin {
 }
 
 dependencies {
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     /* RETROFIT */

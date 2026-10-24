@@ -1,6 +1,7 @@
 package com.example.moseproject.navigation
 
 sealed class AppScreen (val route:String){
+    object Account : AppScreen("account")
 
     object HomeScreen: AppScreen("home_screen")
     object FilmScreen: AppScreen("film_screen")

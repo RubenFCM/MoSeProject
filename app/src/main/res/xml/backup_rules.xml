@@ -6,6 +6,9 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
+    <!-- Firebase manages its session internally. Do not transfer auth preferences via backup. -->
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="device_sharedpref" path="." />
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>
