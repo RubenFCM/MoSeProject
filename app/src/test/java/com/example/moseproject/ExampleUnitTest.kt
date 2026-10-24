@@ -12,7 +12,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
 import io.mockk.*
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import kotlin.test.assertEquals
@@ -40,7 +39,7 @@ class PersonIDViewModelTest {
     @get:Rule
     val rule = InstantTaskExecutorRule()
 
-    private val testDispatcher = TestCoroutineDispatcher()
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var viewModel: PersonIDViewModel
     private lateinit var service: ApiService
 
@@ -62,12 +61,11 @@ class PersonIDViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
         unmockkAll()
     }
 
     @Test
-    fun `getPerson should update dataPerson with person result`() = runBlocking {
+    fun `getPerson should update dataPerson with person result`() = runTest(testDispatcher) {
         val personResult = PersonResult(
             false,
             listOf("Jenna Marie Ortega", "珍娜·奧特嘉", "珍娜·奥尔特加", "ジェナ・オルテガ", "Дженна Ортега", "جنا اورتگا", "제나 오르테가"),
@@ -84,36 +82,22 @@ class PersonIDViewModelTest {
             316.64,
             "/7oUAtVgZU0uLdUSvDHKkINt1y7Y.jpg"
         )
-        val personResult1 = PersonResult(
-            false,
-            listOf("Jenna Marie Ortega", "珍娜·奧特嘉", "珍娜·奥尔特加", "ジェナ・オルテガ", "Дженна Ортега", "جنا اورتگا", "제나 오르테가"),
-            "Jenna Marie Ortega (born September 27, 2002) is an American actress...",
-            "2002-09-27",
-            null,
-            1,
-            null,
-            974169,
-            "nm4911194",
-            "Acting",
-            "Jenna Ortega",
-            "Coachella Valley, Palm Desert, California, USA",
-            316.64,
-            "/7oUAtVgZU0uLdUSvDHKkINt1y7Y.jpg2222"
-        )
         coEvery { service.searchPerson(any(), any()) } returns personResult
 
         viewModel.getPerson("974169")
+        advanceUntilIdle()
 
         val result = viewModel.dataPerson.value
-        assertEquals(personResult1, result)
+        assertEquals(personResult, result)
     }
 
     @Test
-    fun `getPerson should handle exception`() = runBlocking {
+    fun `getPerson should handle exception`() = runTest(testDispatcher) {
         coEvery { service.searchPerson("12345", Constants.API_KEY) } throws Exception("Network error")
 
         println("Ejecutando prueba getPerson")
         viewModel.getPerson("12345")
+        advanceUntilIdle()
 
         val result = viewModel.dataPerson.first()
         assertEquals(null, result)

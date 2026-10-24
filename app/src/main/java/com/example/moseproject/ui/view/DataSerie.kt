@@ -36,7 +36,7 @@ fun DataSerie(navController: NavController, id: String?) {
     LazyColumn(Modifier.fillMaxSize().navigationBarsPadding(), contentPadding = PaddingValues(bottom = 32.dp)) {
         item {
             DetailHero(item.name, item.poster_path, item.backdrop_path, "Serie",
-                listOfNotNull(item.first_air_date?.take(4), "${item.number_of_seasons} temporadas", item.origin_country?.firstOrNull()).joinToString("  ·  "),
+                listOfNotNull(item.first_air_date.orEmpty().take(4), "${item.number_of_seasons} temporadas", item.origin_country.orEmpty().firstOrNull()).joinToString("  ·  "),
                 item.vote_average, navController)
         }
         item { GenreChips(item.genres.orEmpty().map { it.name }) }

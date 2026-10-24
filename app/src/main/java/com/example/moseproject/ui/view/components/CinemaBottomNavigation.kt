@@ -1,5 +1,6 @@
 package com.example.moseproject.ui.view.components
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.Animatable as ColorAnimatable
 import androidx.compose.animation.core.Animatable as FloatAnimatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -100,6 +101,7 @@ fun CinemaNavigationAnimation(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalNavigationAnimation provides animation, content = content)
 }
 
+
 @Composable
 fun CinemaBottomNavigation(
     selectedRoute: String,
@@ -123,7 +125,7 @@ fun CinemaBottomNavigation(
             Modifier.fillMaxWidth(.82f).clip(CircleShape)
                 .background(CinemaNavigationBackground).padding(2.dp)
         ) {
-            val itemWidth = maxWidth / destinations.size
+            val itemWidth = this.maxWidth / destinations.size
 
             // A single moving background spans both the icon and its label.
             Box(Modifier.matchParentSize()) {

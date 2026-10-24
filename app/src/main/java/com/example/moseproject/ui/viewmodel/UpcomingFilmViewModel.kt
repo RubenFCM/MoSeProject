@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.moseproject.data.RetrofitServiceFactory
 import com.example.moseproject.data.model.FilmResult
 import com.example.moseproject.data.model.Result
-import com.example.moseproject.data.model.ResultAll
 import com.example.moseproject.data.utils.Constants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

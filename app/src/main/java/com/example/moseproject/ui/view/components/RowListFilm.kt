@@ -28,7 +28,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.example.moseproject.data.model.FilmResult
-import com.example.moseproject.R
 import com.example.moseproject.data.utils.Constants
 import com.example.moseproject.navigation.AppScreen
 

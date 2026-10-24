@@ -8,7 +8,6 @@ import com.example.moseproject.data.model.SerieResult
 import com.example.moseproject.data.utils.Constants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class TopRatedSeriesViewmodel:ViewModel() {

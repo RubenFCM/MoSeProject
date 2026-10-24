@@ -1,6 +1,5 @@
 package com.example.moseproject.ui.viewmodel
 
-import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moseproject.data.RetrofitServiceFactory

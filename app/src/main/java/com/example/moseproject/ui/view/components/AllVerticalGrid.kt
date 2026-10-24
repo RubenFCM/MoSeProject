@@ -78,7 +78,7 @@ fun AllVerticalGrid(movieSeriesDay:List<ResultAll> , navController:NavController
                         )
                     }
                     Text(
-                        text = movieSeriesDay[index].title ?: movieSeriesDay[index].name ,
+                        text = if (movieSeriesDay[index].media_type == "movie") movieSeriesDay[index].title else movieSeriesDay[index].name,
                         color = CinemaText,
                         modifier = Modifier.padding(top = 8.dp)
                     )

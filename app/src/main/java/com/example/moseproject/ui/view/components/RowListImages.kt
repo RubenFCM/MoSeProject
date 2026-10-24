@@ -20,7 +20,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
-import com.example.moseproject.R
 import com.example.moseproject.data.model.FilmResult
 import com.example.moseproject.data.model.SerieResult
 import com.example.moseproject.data.utils.Constants

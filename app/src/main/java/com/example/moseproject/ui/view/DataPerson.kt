@@ -58,8 +58,9 @@ fun DataPerson(navController: NavController, id: String?) {
             }
             if (!data.biography.isNullOrBlank()) item { Biography(data.biography) }
             item { InfoPerson(data) }
-            if (!credits?.cast.isNullOrEmpty()) item {
-                KnowFor(emptyList(), credits!!, navController)
+            val personCredits = credits
+            if (personCredits != null && personCredits.cast.isNotEmpty()) item {
+                KnowFor(personCredits, navController)
             }
         }
     }
@@ -100,7 +101,7 @@ fun InfoPerson(person: PersonResult?) {
     val details = mutableListOf(
         "Profesión" to departmentName(person.known_for_department),
         "Nacimiento" to if (person.deathday.isNullOrBlank()) formatDateAndCalculateAge(person.birthday) else formatCinemaDate(person.birthday),
-        "Lugar de nacimiento" to person.place_of_birth?.takeIf { it.isNotBlank() }.orEmpty().ifBlank { "No disponible" },
+        "Lugar de nacimiento" to person.place_of_birth.orEmpty().ifBlank { "No disponible" },
         "Género" to when (person.gender) { 1 -> "Femenino"; 2 -> "Masculino"; 3 -> "No binario"; else -> "No indicado" }
     )
     if (!person.deathday.isNullOrBlank()) details.add("Fallecimiento" to formatCinemaDate(person.deathday))
@@ -111,7 +112,7 @@ fun InfoPerson(person: PersonResult?) {
 fun TextInfoTitle(text: String) = SectionHeading(text)
 
 @Composable
-fun KnowFor(images: List<String>, credits: KnownForResult, navController: NavController) {
+fun KnowFor(credits: KnownForResult, navController: NavController) {
     SectionHeading("Su trayectoria en pantalla")
     PosterRow(credits.cast.filter { (it.media_type == "movie" || it.media_type == "tv") && !it.poster_path.isNullOrBlank() }
         .distinctBy { it.media_type + it.id }.map { it.toCinemaItem() }, navController)

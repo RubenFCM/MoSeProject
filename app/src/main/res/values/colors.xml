@@ -13,16 +13,4 @@
     <color name="cinema_rating">#FFCF70</color>
     <color name="cinema_logo_background">@android:color/white</color>
 
-    <!-- Compatibility names for existing XML and shared components. -->
-    <color name="purple_200">@color/cinema_accent</color>
-    <color name="purple_500">@color/cinema_accent</color>
-    <color name="purple_700">@color/cinema_selection</color>
-    <color name="teal_200">@color/cinema_accent</color>
-    <color name="teal_700">@color/cinema_accent</color>
-    <color name="black">@color/cinema_background</color>
-    <color name="white">@color/cinema_text</color>
-    <color name="title_row">@color/cinema_text</color>
-    <color name="rating">@color/cinema_rating</color>
-    <color name="surface_search">@color/cinema_surface</color>
-    <color name="lateral_menu">@color/cinema_surface</color>
 </resources>

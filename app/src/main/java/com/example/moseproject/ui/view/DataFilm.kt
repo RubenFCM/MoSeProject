@@ -38,7 +38,7 @@ fun DataFilm(navController: NavController, id: String?) {
     LazyColumn(Modifier.fillMaxSize().navigationBarsPadding(), contentPadding = PaddingValues(bottom = 32.dp)) {
         item {
             DetailHero(item.title, item.poster_path, item.backdrop_path, "Película",
-                listOfNotNull(item.release_date?.take(4), item.runtime.takeIf { it > 0 }?.let { "$it min" }, item.origin_country?.firstOrNull()).joinToString("  ·  "),
+                listOfNotNull(item.release_date.orEmpty().take(4), item.runtime.takeIf { it > 0 }?.let { "$it min" }, item.origin_country.orEmpty().firstOrNull()).joinToString("  ·  "),
                 item.vote_average, navController)
         }
         item { GenreChips(item.genres.orEmpty().map { it.name }) }

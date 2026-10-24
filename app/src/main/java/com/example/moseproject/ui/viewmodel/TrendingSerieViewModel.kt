@@ -3,7 +3,6 @@ package com.example.moseproject.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moseproject.data.RetrofitServiceFactory
-import com.example.moseproject.data.model.All
 import com.example.moseproject.data.model.ResultSerie
 import com.example.moseproject.data.model.SerieResult
 import com.example.moseproject.data.utils.Constants
