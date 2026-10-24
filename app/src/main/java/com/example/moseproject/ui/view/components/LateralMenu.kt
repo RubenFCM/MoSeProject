@@ -1,17 +1,18 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaText
+import com.example.moseproject.ui.theme.CinemaSurface
+import com.example.moseproject.ui.theme.CinemaMuted
+import com.example.moseproject.ui.theme.CinemaAccent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,7 +33,7 @@ import com.example.moseproject.navigation.AppScreen
 
 @Composable
 fun LateralMenu(navController: NavController, screenType: ScreenType){
-    ModalDrawerSheet(drawerContainerColor = colorResource(id = R.color.lateral_menu)) {
+    ModalDrawerSheet(drawerContainerColor = CinemaSurface) {
         Column(modifier = Modifier.fillMaxHeight().width(240.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically){
                 AsyncImage(
@@ -52,7 +52,7 @@ fun LateralMenu(navController: NavController, screenType: ScreenType){
                     modifier = Modifier
                         .padding(start = 6.dp),
                     fontSize = 28.sp,
-                    color = Color.White
+                    color = CinemaText
                 )
             }
             ItemLateralMenu(navController = navController, text = "Inicio", icon = R.drawable.ic_lateral_home, screenType)
@@ -89,12 +89,12 @@ fun ItemLateralMenu(navController: NavController,text:String, icon: Int, screenT
         Text(
             text = text,
             fontSize = 18.sp,
-            color = if (isSelected) Color.White else Color.Gray
+            color = if (isSelected) CinemaAccent else CinemaMuted
         )
         Icon(
             painter = painterResource(id = icon),
             contentDescription = null,
-            tint = if (isSelected) Color.White else Color.Gray
+            tint = if (isSelected) CinemaAccent else CinemaMuted
         )
     }
 }

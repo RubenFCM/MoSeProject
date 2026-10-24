@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.moseproject.data.RetrofitServiceFactory
 import com.example.moseproject.data.model.FilmResult
 import com.example.moseproject.data.model.Result
-import com.example.moseproject.data.model.ResultAll
 import com.example.moseproject.data.utils.Constants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,18 +23,27 @@ class UpcomingFilmViewModel:ViewModel() {
     // Almacenar lista de peliculas Próximos estrenos, ordenada por fecha de estreno
 
     fun getFilmsUpcoming(){
+        _isLoading.value = true
         viewModelScope.launch {
-            val filmsUpcoming = service.listUpcomingFilms(Constants.API_KEY,1)
-            val filmResults = filmsUpcoming.results.map { result ->
-                FilmResult(
-                    page = filmsUpcoming.page,
-                    results = listOf(result),
-                    total_pages = filmsUpcoming.total_pages,
-                    total_results = filmsUpcoming.total_results
-                )
-            }
-            _films.value = filmResults.sortedBy { date->
-                date.results[0].release_date
+            try {
+                val filmsUpcoming = service.listUpcomingFilms(Constants.API_KEY,1)
+                val filmResults = filmsUpcoming.results.map { result ->
+                    FilmResult(
+                        page = filmsUpcoming.page,
+                        results = listOf(result),
+                        total_pages = filmsUpcoming.total_pages,
+                        total_results = filmsUpcoming.total_results
+                    )
+                }
+                _films.value = filmResults.sortedBy { date->
+                    date.results[0].release_date
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
         }
     }

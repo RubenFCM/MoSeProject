@@ -15,8 +15,11 @@ class PersonIDViewModel: ViewModel() {
     private val _dataPerson = MutableStateFlow<PersonResult?>(null)
 
     val dataPerson : StateFlow<PersonResult?> get() = _dataPerson
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
 
     fun getPerson(id:String){
+        _isLoading.value = true
         viewModelScope.launch {
             try {
                 val person = service.searchPerson(id,Constants.API_KEY)
@@ -24,6 +27,8 @@ class PersonIDViewModel: ViewModel() {
             }catch (e: Exception){
                 e.printStackTrace()
                 _dataPerson.value = null
+            } finally {
+                _isLoading.value = false
             }
         }
     }

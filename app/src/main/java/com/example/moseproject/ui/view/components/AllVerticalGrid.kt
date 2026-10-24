@@ -1,5 +1,7 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaText
+import com.example.moseproject.ui.theme.CinemaMuted
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -76,8 +78,8 @@ fun AllVerticalGrid(movieSeriesDay:List<ResultAll> , navController:NavController
                         )
                     }
                     Text(
-                        text = movieSeriesDay[index].title ?: movieSeriesDay[index].name ,
-                        color = Color.White,
+                        text = if (movieSeriesDay[index].media_type == "movie") movieSeriesDay[index].title else movieSeriesDay[index].name,
+                        color = CinemaText,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                     Text(
@@ -86,7 +88,7 @@ fun AllVerticalGrid(movieSeriesDay:List<ResultAll> , navController:NavController
                             "tv" -> "Seríe"
                             else -> "Desconocido"
                         } ,
-                        color = Color.LightGray,
+                        color = CinemaMuted,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -138,7 +140,7 @@ fun FilmVerticalGrid(movies:List<Result>, navController:NavController){
                     }
                     Text(
                         text = movies[index].title,
-                        color = Color.White,
+                        color = CinemaText,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -190,7 +192,7 @@ fun SerieVerticalGrid(series:List<ResultSerie>, navController:NavController){
                     }
                     Text(
                         text = series[index].name,
-                        color = Color.White,
+                        color = CinemaText,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }

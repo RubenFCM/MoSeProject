@@ -1,5 +1,7 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaText
+import com.example.moseproject.ui.theme.CinemaAccent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -10,14 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.moseproject.R
 import com.example.moseproject.navigation.AppScreen
 
 @Composable
@@ -55,14 +54,14 @@ fun TitleRow(title:String, navController : NavController){
     ){
         Text(
             text = title,
-            color = colorResource(id = R.color.title_row),
+            color = CinemaText,
             fontSize = 22.sp,
             fontFamily = FontFamily.SansSerif,
             fontWeight = FontWeight.ExtraBold,
         )
         Text(
             text = "Ver más",
-            color = colorResource(id = R.color.title_row),
+            color = CinemaAccent,
             fontSize = 16.sp,
             fontFamily = FontFamily.SansSerif,
             fontWeight = FontWeight.ExtraBold,

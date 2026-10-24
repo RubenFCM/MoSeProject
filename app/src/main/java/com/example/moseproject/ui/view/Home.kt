@@ -1,77 +1,52 @@
 package com.example.moseproject.ui.view
 
-import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.moseproject.data.utils.Constants
-import com.example.moseproject.data.utils.ScreenType
-import com.example.moseproject.ui.view.components.CarouselCard
-import com.example.moseproject.ui.view.components.LateralMenu
-import com.example.moseproject.ui.view.components.RowListAll
-import com.example.moseproject.ui.view.components.TitleRow
-import com.example.moseproject.ui.view.components.Topbar
-import com.example.moseproject.ui.viewmodel.TrendingAllDayViewModel
-import com.example.moseproject.ui.viewmodel.TrendingAllViewModel
+import com.example.moseproject.navigation.AppScreen
+import com.example.moseproject.ui.view.components.*
+import com.example.moseproject.ui.viewmodel.*
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Home(navController: NavController){
-
-    val currentScreen: ScreenType = ScreenType.HOME // Tipo de pantalla en la que me encuentro
-
-    val trendingAllViewModel : TrendingAllViewModel = viewModel()
-    val trendingAllDayViewModel : TrendingAllDayViewModel = viewModel()
-
-    trendingAllViewModel.getAllTrendingWeek()
-    trendingAllDayViewModel.getAllTrendingDay()
-
-    val allWeek by trendingAllViewModel.all.collectAsState(initial = emptyList())
-    val dataWeek = allWeek.map { res ->
-        res.results[0]
+fun Home(navController: NavController) {
+    val weekModel: TrendingAllViewModel = viewModel()
+    val dayModel: TrendingAllDayViewModel = viewModel()
+    LaunchedEffect(Unit) {
+        weekModel.getAllTrendingWeek()
+        dayModel.getAllTrendingDay()
     }
-    val imagesWeek = allWeek.map { res ->
-        Constants.BASE_URL_IMAGES_W500+res.results[0].poster_path
-    }
-    val allDay by trendingAllDayViewModel.all.collectAsState(initial = emptyList())
-    val dataDay = allDay.map { res ->
-        res.results[0]
-    }
+    val week by weekModel.all.collectAsState()
+    val day by dayModel.all.collectAsState()
+    val loading by weekModel.isLoading.collectAsState()
+    val weekItems = week.flatMap { it.results }.filter { it.media_type == "movie" || it.media_type == "tv" }.map { it.toCinemaItem() }
+    val dayItems = day.flatMap { it.results }.filter { it.media_type == "movie" || it.media_type == "tv" }.map { it.toCinemaItem() }
 
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-    ModalNavigationDrawer(drawerContent = {
-        LateralMenu(navController = navController, screenType = currentScreen)
-    },drawerState = drawerState) {
-        Scaffold(
-            containerColor = Color.Black,
-            topBar = { Topbar(title = "Cine Verse", navController,currentScreen,drawerState,scope) }
-        ){
-            LazyColumn() {
+    CinemaScaffold(navController, AppScreen.HomeScreen.route, "Descubre", AppScreen.SearhScreenFilm.route) { padding ->
+        if (loading && weekItems.isEmpty()) {
+            Progress(Modifier.padding(padding))
+        } else if (weekItems.isEmpty() && dayItems.isEmpty()) {
+            EmptyState("No hemos podido cargar el catálogo", "Comprueba tu conexión y vuelve a abrir esta pantalla.", Modifier.padding(padding))
+        } else {
+            LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 28.dp + LocalCinemaNavigationClearance.current)) {
+                item { ScreenIntro("El cine empieza aquí", "Tu próxima\ngran historia.", "Películas, series y las personas que las hacen posibles.") }
                 item {
-                    CarouselCard(imagesWeek)
+                    Row(Modifier.padding(horizontal = 20.dp).padding(bottom = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(selected = true, onClick = {}, label = { Text("Para ti") })
+                        FilterChip(selected = false, onClick = { navController.navigate(AppScreen.FilmScreen.route) }, label = { Text("Películas") })
+                        FilterChip(selected = false, onClick = { navController.navigate(AppScreen.SerieScreen.route) }, label = { Text("Series") })
+                    }
                 }
-                item {
-                    TitleRow(title = "Populares hoy",navController)
-                }
-                item {
-                    RowListAll(data = dataDay, navController)
-                }
-                item {
-                    TitleRow(title = "Populares esta semana",navController)
-                }
-                item {
-                    RowListAll(data = dataWeek, navController)
-                }
+                weekItems.firstOrNull()?.let { featured -> item { FeaturedCard(featured, navController, "TENDENCIA DE LA SEMANA") } }
+                item { SectionHeading("Lo más visto hoy") { navController.navigate(AppScreen.AllDay.route) } }
+                item { PosterRow(dayItems, navController) }
+                item { SectionHeading("Esta semana") { navController.navigate(AppScreen.AllWeek.route) } }
+                item { PosterRow(weekItems, navController) }
             }
         }
     }

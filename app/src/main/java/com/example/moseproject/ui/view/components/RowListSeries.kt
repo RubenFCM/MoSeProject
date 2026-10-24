@@ -1,5 +1,8 @@
 package com.example.moseproject.ui.view.components
 
+import com.example.moseproject.ui.theme.CinemaText
+import com.example.moseproject.ui.theme.CinemaRating
+import com.example.moseproject.ui.theme.CinemaMuted
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,7 +27,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
-import com.example.moseproject.R
 import com.example.moseproject.data.model.SerieResult
 import com.example.moseproject.data.utils.Constants
 import com.example.moseproject.navigation.AppScreen
@@ -80,7 +81,7 @@ fun RowListSeries(series :List<SerieResult>, navController: NavController) {
                     Row() {
                         Text(
                             text = series[serie].results[0].name,
-                            color = Color.White,
+                            color = CinemaText,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
@@ -91,7 +92,7 @@ fun RowListSeries(series :List<SerieResult>, navController: NavController) {
                         )
                         Text(
                             text = ratings[serie],
-                            color = colorResource(id = R.color.rating),
+                            color = CinemaRating,
                             modifier = Modifier
                                 .padding(top = 34.dp),
                             textAlign = TextAlign.End,
@@ -103,7 +104,7 @@ fun RowListSeries(series :List<SerieResult>, navController: NavController) {
                         text = series[serie].results[0].first_air_date,
                         modifier = Modifier
                             .padding(start = 4.dp),
-                        color = Color.White,
+                        color = CinemaMuted,
                         textAlign = TextAlign.End,
                         fontSize = 18.sp,
                     )
