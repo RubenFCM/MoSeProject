@@ -16,6 +16,17 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
+    @GET("{media_type}/{tmdb_id}?language=es-ES")
+    suspend fun watchDetail(@Path("media_type") type: String, @Path("tmdb_id") id: Int,
+        @Query("api_key") apiKey: String): com.example.moseproject.data.watchlist.WatchDetailDto
+
+    @GET("{media_type}/{tmdb_id}/watch/providers")
+    suspend fun watchProviders(@Path("media_type") type: String, @Path("tmdb_id") id: Int,
+        @Query("api_key") apiKey: String): com.example.moseproject.data.watchlist.ProvidersDto
+
+    @GET("tv/{series_id}/season/{season_number}?language=es-ES")
+    suspend fun watchSeason(@Path("series_id") id: Int, @Path("season_number") season: Int,
+        @Query("api_key") apiKey: String): com.example.moseproject.data.watchlist.SeasonEpisodesDto
     
     @GET("movie/popular?language=es-ES&page=1&region=es")
     suspend fun listPopularMovies(

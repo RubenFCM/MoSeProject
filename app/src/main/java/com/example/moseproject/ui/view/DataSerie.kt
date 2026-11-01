@@ -11,9 +11,12 @@ import androidx.navigation.NavController
 import com.example.moseproject.data.utils.ScreenType
 import com.example.moseproject.ui.view.components.*
 import com.example.moseproject.ui.viewmodel.*
+import com.example.moseproject.data.watchlist.MediaKey
+import com.example.moseproject.data.watchlist.MediaType
+import com.example.moseproject.ui.view.watchlist.DetailWatchlistAction
 
 @Composable
-fun DataSerie(navController: NavController, id: String?) {
+fun DataSerie(navController: NavController, id: String?, watchlist: WatchlistViewModel, auth: AuthViewModel) {
     val model: SerieIDViewModel = viewModel()
     val videos: VideoViewModel = viewModel()
     val recommendations: RecomendationsViewModel = viewModel()
@@ -40,6 +43,7 @@ fun DataSerie(navController: NavController, id: String?) {
                 item.vote_average, navController)
         }
         item { GenreChips(item.genres.orEmpty().map { it.name }) }
+        item { DetailWatchlistAction(MediaKey(MediaType.Tv, item.id), navController, watchlist, auth) }
         item { OverviewSection(item.overview.orEmpty()) }
         video?.results?.firstOrNull()?.let { trailer ->
             item {

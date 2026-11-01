@@ -60,7 +60,7 @@ import com.example.moseproject.ui.viewmodel.*
 
 /** An isolated, UID-scoped account navigation tree. Disposed on logout or account changes. */
 @Composable
-fun AccountRoute(viewModel: AuthViewModel, onBrowse: () -> Unit) {
+fun AccountRoute(viewModel: AuthViewModel, onBrowse: () -> Unit, onWatchlist: (() -> Unit)? = null) {
     val window = (LocalContext.current as Activity).window
     val view = LocalView.current
     DisposableEffect(window, view) {
@@ -121,6 +121,7 @@ fun AccountRoute(viewModel: AuthViewModel, onBrowse: () -> Unit) {
             is AuthSession.Authenticated -> AuthPageLayout(R.string.auth_verified_title, onBrowse) {
                 Text(session.user.email, style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.auth_verified_description), color = CinemaMuted)
+                onWatchlist?.let { action -> Button(onClick = action) { Text(stringResource(R.string.wl_title)) } }
                 StatusFeedback(state)
                 ActionButton(R.string.auth_sign_out, state, 0, viewModel::signOut)
             }

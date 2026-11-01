@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.moseproject.R
+import androidx.compose.ui.res.stringResource
 import com.example.moseproject.navigation.AppScreen
 import com.example.moseproject.ui.theme.CinemaNavigationActive
 import com.example.moseproject.ui.theme.CinemaNavigationBackground
@@ -52,13 +53,14 @@ import com.example.moseproject.ui.theme.CinemaNavigationSelection
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-private data class NavigationDestination(val route: String, val label: String, val icon: Int)
+private data class NavigationDestination(val route: String, val label: String, val icon: Int, val labelResource: Int? = null)
 
 private val destinations = listOf(
     NavigationDestination(AppScreen.HomeScreen.route, "Inicio", R.drawable.ic_lateral_home),
     NavigationDestination(AppScreen.FilmScreen.route, "Películas", R.drawable.ic_lateral_film),
     NavigationDestination(AppScreen.SerieScreen.route, "Series", R.drawable.ic_lateral_serie),
-    NavigationDestination(AppScreen.PeopleScreen.route, "Personas", R.drawable.ic_people)
+    NavigationDestination(AppScreen.PeopleScreen.route, "Personas", R.drawable.ic_people),
+    NavigationDestination(AppScreen.Watchlist.route, "", R.drawable.ic_watchlist, R.string.wl_title)
 )
 
 private const val SelectionDurationMillis = 250
@@ -122,7 +124,7 @@ fun CinemaBottomNavigation(
         contentAlignment = Alignment.Center
     ) {
         BoxWithConstraints(
-            Modifier.fillMaxWidth(.82f).clip(CircleShape)
+            Modifier.fillMaxWidth(.92f).clip(CircleShape)
                 .background(CinemaNavigationBackground).padding(2.dp)
         ) {
             val itemWidth = this.maxWidth / destinations.size
@@ -156,13 +158,13 @@ fun CinemaBottomNavigation(
                         Icon(painterResource(destination.icon), null, Modifier.size(22.dp), tint = color)
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            destination.label,
+                            destination.labelResource?.let { stringResource(it) } ?: destination.label,
                             color = color,
                             style = MaterialTheme.typography.labelLarge,
                             fontSize = 12.sp,
                             lineHeight = 18.sp,
                             textAlign = TextAlign.Center,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }

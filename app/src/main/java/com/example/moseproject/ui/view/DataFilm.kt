@@ -13,9 +13,12 @@ import com.example.moseproject.ui.view.components.*
 import com.example.moseproject.ui.viewmodel.*
 import java.text.NumberFormat
 import java.util.Locale
+import com.example.moseproject.data.watchlist.MediaKey
+import com.example.moseproject.data.watchlist.MediaType
+import com.example.moseproject.ui.view.watchlist.DetailWatchlistAction
 
 @Composable
-fun DataFilm(navController: NavController, id: String?) {
+fun DataFilm(navController: NavController, id: String?, watchlist: WatchlistViewModel, auth: AuthViewModel) {
     val model: FilmIdViewModel = viewModel()
     val videos: VideoViewModel = viewModel()
     val recommendations: RecomendationsViewModel = viewModel()
@@ -42,6 +45,7 @@ fun DataFilm(navController: NavController, id: String?) {
                 item.vote_average, navController)
         }
         item { GenreChips(item.genres.orEmpty().map { it.name }) }
+        item { DetailWatchlistAction(MediaKey(MediaType.Movie, item.id), navController, watchlist, auth) }
         item { OverviewSection(item.overview.orEmpty()) }
         video?.results?.firstOrNull()?.let { trailer ->
             item {

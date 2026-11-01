@@ -1,6 +1,9 @@
 package com.example.moseproject.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,17 +28,31 @@ import com.example.moseproject.ui.view.SearchSerie
 import com.example.moseproject.ui.view.Series
 import com.example.moseproject.ui.view.auth.AccountRoute
 import com.example.moseproject.ui.viewmodel.AuthViewModel
+import com.example.moseproject.ui.viewmodel.WatchlistViewModel
+import com.example.moseproject.ui.view.watchlist.WatchlistScreen
+import com.example.moseproject.data.watchlist.MediaType
 
 @Composable
-fun AppNavigation(authViewModel: AuthViewModel){
+fun AppNavigation(authViewModel: AuthViewModel, watchlistViewModel: WatchlistViewModel){
     val navController = rememberNavController() // Gestiona el estado de la navegación entre pantallas
+    val watchState by watchlistViewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(watchState.resumeKey) {
+        watchState.resumeKey?.let { key ->
+            watchlistViewModel.consumeResume()
+            navController.navigate((if (key.type == MediaType.Movie) AppScreen.FilmID.route else AppScreen.SerieID.route) + "/${key.tmdbId}") {
+                popUpTo(AppScreen.Account.route) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
     NavHost(navController = navController, startDestination = AppScreen.HomeScreen.route ){
+        composable(AppScreen.Watchlist.route) { WatchlistScreen(navController, watchlistViewModel, authViewModel) }
         composable(AppScreen.Account.route) {
             AccountRoute(authViewModel, onBrowse = {
                 if (!navController.popBackStack()) {
                     navController.navigate(AppScreen.HomeScreen.route) { launchSingleTop = true }
                 }
-            })
+            }, onWatchlist = { navController.navigate(AppScreen.Watchlist.route) { launchSingleTop = true } })
         }
 
         composable(route= AppScreen.HomeScreen.route){
@@ -96,7 +113,7 @@ fun AppNavigation(authViewModel: AuthViewModel){
                     type = NavType.StringType
                 })
             ){
-            DataFilm(navController,it.arguments?.getString("id"))
+            DataFilm(navController,it.arguments?.getString("id"), watchlistViewModel, authViewModel)
         }
 
         composable(
@@ -106,7 +123,7 @@ fun AppNavigation(authViewModel: AuthViewModel){
                     type = NavType.StringType
                 })
             ){
-            DataSerie(navController,it.arguments?.getString("id"))
+            DataSerie(navController,it.arguments?.getString("id"), watchlistViewModel, authViewModel)
         }
 
         composable(

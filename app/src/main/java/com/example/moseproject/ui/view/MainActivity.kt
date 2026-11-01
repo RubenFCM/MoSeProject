@@ -14,10 +14,15 @@ import com.example.moseproject.ui.view.components.CinemaNavigationAnimation
 import com.example.moseproject.CineVerseApplication
 import com.example.moseproject.data.auth.AuthContainer
 import com.example.moseproject.ui.viewmodel.AuthViewModel
+import com.example.moseproject.ui.viewmodel.WatchlistViewModel
 
 class MainActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels {
         AuthViewModel.factory((application as CineVerseApplication).authRepository, AuthContainer.passwordPolicy)
+    }
+    private val watchlistViewModel: WatchlistViewModel by viewModels {
+        val app = application as CineVerseApplication
+        WatchlistViewModel.factory(app.watchlistRepository, app.watchlistCatalog, authViewModel.state)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +30,7 @@ class MainActivity : ComponentActivity() {
             MoSeProjectTheme {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     CinemaNavigationAnimation {
-                        AppNavigation(authViewModel)
+                        AppNavigation(authViewModel, watchlistViewModel)
                     }
                 }
             }
