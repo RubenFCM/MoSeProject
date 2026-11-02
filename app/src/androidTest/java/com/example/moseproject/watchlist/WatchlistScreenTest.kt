@@ -28,12 +28,13 @@ class WatchlistScreenTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val authRepo = UiWatchAuth()
     private val repository = UiWatchRepository()
+    private val catalog = UiWatchCatalog()
     private lateinit var auth: AuthViewModel
     private lateinit var model: WatchlistViewModel
     @Before fun setup() {
         compose.activityRule.scenario.onActivity { activity ->
             auth = AuthViewModel(authRepo, PasswordPolicy())
-            model = WatchlistViewModel(repository, UiWatchCatalog(), auth.state, SavedStateHandle())
+            model = WatchlistViewModel(repository, catalog, auth.state, SavedStateHandle())
             activity.viewModelStore.put("auth", auth); activity.viewModelStore.put("watchlist", model)
         }
     }
@@ -55,6 +56,34 @@ class WatchlistScreenTest {
         }
     }
     private fun text(id: Int) = compose.activity.getString(id)
+    @Test fun pendingEpisodeAppearsOnFirstVisitAndClearsOnlyAsProgressAdvancesWithLargeFonts() {
+        val ten = Episode(10, 1, 10, "Episode ten", "2026-01-01", 45)
+        val eleven = ten.copy(id = 11, number = 11, title = "Episode eleven")
+        catalog.available = listOf(ten, eleven)
+        repository.entry = WatchEntry(CatalogMetadata(MediaKey(MediaType.Tv, 123), "UI test series", null, null, null),
+            WatchStatus.InProgress, WatchProgress.Series(EpisodePosition(ten, 15)))
+        show(1.6f)
+        val notice = compose.activity.resources.getQuantityString(R.plurals.wl_pending_episodes, 1, 1)
+        compose.onNodeWithText(notice).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.wl_pending_next, 1, 11)).assertExists()
+        compose.onNodeWithText(text(R.string.wl_manage)).performScrollTo().performClick()
+        compose.onNodeWithText(text(R.string.wl_finish_episode)).performScrollTo().performClick()
+        compose.onNodeWithText(notice).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.wl_manage)).performScrollTo().performClick()
+        compose.onNodeWithText(text(R.string.wl_finish_episode)).performScrollTo().performClick()
+        compose.onNodeWithText(notice).assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.wl_no_pending_episodes)).assertExists()
+    }
+    @Test fun pendingEpisodesInFollowingSeasonAppearWithoutAReleaseBaseline() {
+        val finale = Episode(10, 1, 10, "Finale", "2026-01-01", 45)
+        val premiere = finale.copy(id = 20, season = 2, number = 1)
+        catalog.available = listOf(finale, premiere)
+        repository.entry = WatchEntry(CatalogMetadata(MediaKey(MediaType.Tv, 123), "UI test series", null, null, null),
+            WatchStatus.InProgress, WatchProgress.Series(lastCompleted = finale))
+        show()
+        compose.onNodeWithText(compose.activity.getString(R.string.wl_pending_next, 2, 1)).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.wl_pending_new_season, 2)).assertExists()
+    }
     @Test fun progressIsSavedOnlyOnConfirmationAndWorksWithLargeFonts() {
         show(1.6f)
         compose.onNodeWithText(text(R.string.wl_manage)).performScrollTo().performClick()
@@ -113,9 +142,13 @@ private class UiWatchRepository : WatchlistRepository {
     override suspend fun delete(uid: String, key: MediaKey) { entry = null }
 }
 private class UiWatchCatalog : WatchlistCatalog {
+    var available: List<Episode> = emptyList()
+    override suspend fun latestAired(key: MediaKey): Episode? = available.lastOrNull()
     override suspend fun metadata(key: MediaKey): CatalogMetadata = error("UI test must not query TMDB")
     override suspend fun providers(key: MediaKey, region: String) = Availability(region)
-    override suspend fun seasons(key: MediaKey) = emptyList<Season>()
-    override suspend fun episodes(key: MediaKey, season: Int, refresh: Boolean) = emptyList<Episode>()
-    override suspend fun nextAired(key: MediaKey, episode: Episode): Episode? = null
+    override suspend fun seasons(key: MediaKey) = available.map { Season(it.season, null, null) }.distinctBy { it.number }
+    override suspend fun episodes(key: MediaKey, season: Int, refresh: Boolean) = available.filter { it.season == season }
+    override suspend fun nextAired(key: MediaKey, episode: Episode): Episode? = available.firstOrNull {
+        it.season > episode.season || (it.season == episode.season && it.number > episode.number)
+    }
 }

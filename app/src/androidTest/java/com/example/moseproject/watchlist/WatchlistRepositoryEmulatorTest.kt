@@ -95,6 +95,22 @@ class WatchlistRepositoryEmulatorTest {
         } catch (error: FirebaseFirestoreException) { assertEquals(FirebaseFirestoreException.Code.PERMISSION_DENIED, error.code) }
     } }
 
+    @Test fun watchedSeriesRetainsCompletedEpisodeToCompareWithLaterSeasons() = runBlocking { withTimeout(60_000) {
+        val uid = verifiedUser()
+        val tv = MediaKey(MediaType.Tv, 123)
+        val first = repository.add(uid, CatalogMetadata(tv, "Series", null, null, null))
+        val finale = Episode(10, 1, 10, "Finale", "2026-01-01", 45)
+        val watched = repository.saveProgress(uid, first, WatchStatus.Watched, WatchProgress.Series(lastCompleted = finale))
+        val read = repository.get(uid, tv)!!
+        assertEquals(finale, (read.progress as WatchProgress.Series).lastCompleted)
+        assertEquals(WatchStatus.Watched, read.status)
+        val premiere = finale.copy(id = 20, season = 2, number = 1)
+        val pending = read.pendingEpisodes(listOf(finale, premiere), java.time.LocalDate.of(2026, 11, 1))
+        assertEquals(1, pending.count); assertEquals(premiere, pending.next)
+        val reset = repository.saveProgress(uid, watched, WatchStatus.Pending, WatchProgress.Series())
+        assertNull((reset.progress as WatchProgress.Series).lastCompleted)
+    } }
+
     private fun json(method: String, address: String, body: JSONObject? = null): JSONObject {
         val url = URL(address)
         check(url.host == "10.0.2.2" && url.port == 9099 && PROJECT.startsWith("demo-"))

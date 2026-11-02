@@ -32,6 +32,83 @@ class WatchlistViewModelTest {
     }
     @After fun cleanup() { store.clear(); Dispatchers.resetMain() }
 
+    @Test fun `episode eleven is pending immediately when saved position is ten even on first visit`() = runTest(dispatcher) {
+        val tv = MediaKey(MediaType.Tv, 123)
+        val ten = Episode(10, 1, 10, "Ten", "2026-01-01", 45)
+        catalog.catalogEpisodes = listOf(ten, ten.copy(id = 11, number = 11))
+        repo.documents["A" to tv] = sample(tv).copy(status = WatchStatus.InProgress, progress = WatchProgress.Series(EpisodePosition(ten, 15)))
+        runCurrent(); vm.openList(); runCurrent()
+        val pending = vm.state.value.pendingEpisodes[tv]!!
+        assertEquals(1, pending.count); assertEquals(11, pending.next?.number)
+        assertNull(pending.newSeason)
+        vm.openList(); runCurrent()
+        assertEquals(1, catalog.seasonCalls)
+        assertEquals(1, vm.state.value.pendingEpisodes[tv]!!.count)
+        vm.openEditor(tv); runCurrent()
+        vm.selectEpisode(11); vm.saveEditor(WatchStatus.InProgress, "0"); runCurrent()
+        assertEquals(0, vm.state.value.pendingEpisodes[tv]!!.count)
+    }
+
+    @Test fun `finishing ten keeps queued eleven pending then completing eleven removes the notice`() = runTest(dispatcher) {
+        val tv = MediaKey(MediaType.Tv, 123)
+        val ten = Episode(10, 1, 10, "Ten", "2026-01-01", 45)
+        catalog.catalogEpisodes = listOf(ten, ten.copy(id = 11, number = 11))
+        repo.documents["A" to tv] = sample(tv).copy(status = WatchStatus.InProgress, progress = WatchProgress.Series(EpisodePosition(ten, 15)))
+        runCurrent(); vm.openList(); runCurrent(); vm.openEditor(tv); runCurrent()
+        vm.finishEpisode(); runCurrent()
+        assertEquals(1, vm.state.value.pendingEpisodes[tv]!!.count)
+        assertEquals(11, vm.state.value.pendingEpisodes[tv]!!.next?.number)
+        vm.openEditor(tv); runCurrent(); vm.finishEpisode(); runCurrent()
+        assertEquals(0, vm.state.value.pendingEpisodes[tv]!!.count)
+        assertEquals(11, (repo.documents["A" to tv]!!.progress as WatchProgress.Series).lastCompleted?.number)
+    }
+
+    @Test fun `later seasons count real aired episodes after saved progress without waiting for a new release`() = runTest(dispatcher) {
+        val tv = MediaKey(MediaType.Tv, 123)
+        val ten = Episode(10, 1, 10, "Finale", "2025-01-01", 45)
+        catalog.catalogEpisodes = listOf(ten, ten.copy(id = 20, season = 2, number = 1), ten.copy(id = 22, season = 2, number = 3),
+            ten.copy(id = 23, season = 2, number = 4, airDate = "2027-01-01"))
+        repo.documents["A" to tv] = sample(tv).copy(status = WatchStatus.InProgress, progress = WatchProgress.Series(lastCompleted = ten))
+        runCurrent(); vm.openList(); runCurrent()
+        assertEquals(2, vm.state.value.pendingEpisodes[tv]!!.count)
+        assertEquals(2, vm.state.value.pendingEpisodes[tv]!!.newSeason)
+        assertEquals(1, vm.state.value.pendingEpisodes[tv]!!.next?.number)
+    }
+
+    @Test fun `marking a series watched retains the completed boundary and detects a later season`() = runTest(dispatcher) {
+        val tv = MediaKey(MediaType.Tv, 123)
+        val ten = Episode(10, 1, 10, "Finale", "2025-01-01", 45)
+        catalog.catalogEpisodes = listOf(ten)
+        repo.documents["A" to tv] = sample(tv).copy(status = WatchStatus.InProgress, progress = WatchProgress.Series(EpisodePosition(ten, 15)))
+        runCurrent(); vm.openList(); runCurrent(); vm.openEditor(tv); runCurrent()
+        vm.saveEditor(WatchStatus.Watched, ""); runCurrent()
+        assertEquals(ten, (repo.documents["A" to tv]!!.progress as WatchProgress.Series).lastCompleted)
+        catalog.catalogEpisodes = listOf(ten, ten.copy(id = 20, season = 2, number = 1))
+        vm.refreshEpisodes(); runCurrent()
+        assertEquals(1, vm.state.value.pendingEpisodes[tv]!!.count)
+        assertEquals(WatchStatus.Watched, repo.documents["A" to tv]!!.status)
+    }
+
+    @Test fun `failed pending check can retry and account switch discards a late catalogue response`() = runTest(dispatcher) {
+        val tv = MediaKey(MediaType.Tv, 123)
+        repo.documents["A" to tv] = sample(tv)
+        catalog.catalogFailure = true
+        runCurrent(); vm.openList(); runCurrent()
+        assertTrue(vm.state.value.episodesCheckFailed)
+        assertEquals(1, vm.state.value.entries.size)
+        assertNull(vm.state.value.pendingEpisodes[tv])
+        catalog.catalogFailure = false
+        vm.refreshEpisodes(); runCurrent()
+        assertFalse(vm.state.value.episodesCheckFailed)
+        assertEquals(1, vm.state.value.pendingEpisodes[tv]!!.count)
+        catalog.gate = CompletableDeferred()
+        vm.refreshEpisodes(); runCurrent()
+        auth.value = AuthUiState(session = authenticated("B")); runCurrent()
+        catalog.gate!!.complete(Unit); runCurrent()
+        assertTrue(vm.state.value.pendingEpisodes.isEmpty())
+        assertEquals("B", vm.state.value.uid)
+    }
+
     @Test fun `repeated taps submit once and saved UI only appears after server acknowledgement`() = runTest(dispatcher) {
         runCurrent()
         repo.addGate = CompletableDeferred()
@@ -187,10 +264,23 @@ private class MemoryWatchRepository : WatchlistRepository {
 }
 
 private class MemoryWatchCatalog : WatchlistCatalog {
+    var catalogEpisodes: List<Episode>? = null
+    var seasonCalls = 0
+    var catalogFailure = false
+    var gate: CompletableDeferred<Unit>? = null
+    override suspend fun latestAired(key: MediaKey): Episode? = catalogEpisodes?.maxWithOrNull(compareBy({ it.season }, { it.number }))
     var metadataCalls = 0
     override suspend fun metadata(key: MediaKey): CatalogMetadata { metadataCalls++; return sample(key).catalog }
     override suspend fun providers(key: MediaKey, region: String) = Availability(region)
-    override suspend fun seasons(key: MediaKey) = listOf(Season(0, "Specials", null), Season(1, "First", null))
-    override suspend fun episodes(key: MediaKey, season: Int, refresh: Boolean) = listOf(Episode(10 + season * 2, season, 1, "Episode", "2026-01-01", 45))
-    override suspend fun nextAired(key: MediaKey, episode: Episode) = episode.copy(id = episode.id + 1, number = 2)
+    override suspend fun seasons(key: MediaKey): List<Season> {
+        seasonCalls++
+        gate?.let { withContext(NonCancellable) { it.await() } }
+        if (catalogFailure) throw java.io.IOException()
+        return catalogEpisodes?.map { Season(it.season, null, null) }?.distinctBy { it.number }
+            ?: listOf(Season(0, "Specials", null), Season(1, "First", null))
+    }
+    override suspend fun episodes(key: MediaKey, season: Int, refresh: Boolean) = catalogEpisodes?.filter { it.season == season }
+        ?: listOf(Episode(10 + season * 2, season, 1, "Episode", "2026-01-01", 45))
+    override suspend fun nextAired(key: MediaKey, episode: Episode): Episode? = if (catalogEpisodes == null) episode.copy(id = episode.id + 1, number = 2)
+        else catalogEpisodes!!.firstOrNull { it.season > episode.season || (it.season == episode.season && it.number > episode.number) }
 }

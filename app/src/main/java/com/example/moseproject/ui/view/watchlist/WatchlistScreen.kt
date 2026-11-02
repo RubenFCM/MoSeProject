@@ -15,6 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.Image
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -62,6 +63,11 @@ fun WatchlistScreen(nav: NavController, viewModel: WatchlistViewModel, auth: Aut
                 item { WatchFilters(state.filter, viewModel::setFilter) }
                 item {
                     OutlinedButton(onClick = viewModel::openList, enabled = !state.loading && !state.busy) { Text(stringResource(R.string.wl_refresh)) }
+                    TextButton(onClick = viewModel::refreshEpisodes, enabled = !state.loading && !state.busy && !state.episodesChecking) {
+                        Text(stringResource(R.string.wl_check_episodes))
+                    }
+                    if (state.episodesChecking) Text(stringResource(R.string.wl_checking_episodes), color = CinemaMuted)
+                    if (state.episodesCheckFailed) Text(stringResource(R.string.wl_episodes_check_failed), color = CinemaMuted)
                     WatchFeedback(state)
                     if (state.loading || state.busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text(stringResource(if (state.busy) R.string.wl_saving else R.string.wl_loading)) }
                     if (state.error != null) TextButton(onClick = viewModel::openList, enabled = !state.busy) { Text(stringResource(R.string.wl_retry)) }
@@ -71,7 +77,7 @@ fun WatchlistScreen(nav: NavController, viewModel: WatchlistViewModel, auth: Aut
                     Text(stringResource(R.string.wl_empty_description), color = CinemaMuted)
                 }
                 items(state.entries, key = { it.catalog.key.documentId }) { entry ->
-                    WatchCard(entry, state.busy, onDetails = {
+                    WatchCard(entry, state.pendingEpisodes[entry.catalog.key], state.busy, onDetails = {
                         nav.navigate((if (entry.catalog.key.type == MediaType.Movie) AppScreen.FilmID.route else AppScreen.SerieID.route) + "/${entry.catalog.key.tmdbId}")
                     }, onManage = { viewModel.openEditor(entry.catalog.key) })
                 }
@@ -107,7 +113,7 @@ private fun WatchFilters(filter: WatchFilter, onChange: (WatchFilter) -> Unit) {
 }
 
 @Composable
-private fun WatchCard(entry: WatchEntry, busy: Boolean, onDetails: () -> Unit, onManage: () -> Unit) {
+private fun WatchCard(entry: WatchEntry, pending: PendingEpisodes?, busy: Boolean, onDetails: () -> Unit, onManage: () -> Unit) {
     Surface(color = CinemaSurface, shape = RoundedCornerShape(18.dp), modifier = Modifier.testTag("wl_entry_${entry.catalog.key.documentId}")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -121,6 +127,17 @@ private fun WatchCard(entry: WatchEntry, busy: Boolean, onDetails: () -> Unit, o
                 }
             }
             ProgressSummary(entry)
+            pending?.let { backlog ->
+                if (backlog.needsPosition) Text(stringResource(R.string.wl_pending_needs_position), color = CinemaMuted)
+                else if (backlog.count > 0) Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(12.dp)) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(pluralStringResource(R.plurals.wl_pending_episodes, backlog.count, backlog.count), style = MaterialTheme.typography.titleSmall)
+                        backlog.next?.let { Text(stringResource(R.string.wl_pending_next, it.season, it.number)) }
+                        backlog.newSeason?.let { Text(stringResource(R.string.wl_pending_new_season, it)) }
+                        Text(stringResource(R.string.wl_episode_availability_note), style = MaterialTheme.typography.bodySmall)
+                    }
+                } else Text(stringResource(R.string.wl_no_pending_episodes), color = CinemaMuted)
+            }
             ProviderPanel(entry.catalog.availability)
             TextButton(onClick = onDetails) { Text(entry.catalog.title) }
             Button(onClick = onManage, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.wl_manage)) }
@@ -148,7 +165,7 @@ fun ProgressSummary(entry: WatchEntry) {
                 episode.runtimeMinutes?.let { Text(stringResource(R.string.wl_episode_runtime, it), color = CinemaMuted) }
             }
             progress.lastCompleted?.let { Text(stringResource(R.string.wl_completed_episode, stringResource(R.string.wl_episode_position, it.season, it.number))) }
-            if (progress.current == null) Text(stringResource(if (progress.lastCompleted == null) R.string.wl_no_position else R.string.wl_no_next))
+            if (progress.current == null && progress.lastCompleted == null) Text(stringResource(R.string.wl_no_position))
         }
     }
 }

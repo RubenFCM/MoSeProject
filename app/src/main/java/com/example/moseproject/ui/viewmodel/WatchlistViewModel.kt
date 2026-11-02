@@ -24,12 +24,15 @@ data class WatchlistUiState(
     val loading: Boolean = false, val hasMore: Boolean = false, val busy: Boolean = false,
     val error: WatchFailure? = null, val notice: WatchNotice? = null,
     val memberships: Map<MediaKey, WatchEntry?> = emptyMap(), val checking: Set<MediaKey> = emptySet(),
-    val editor: WatchEditor? = null, val resumeKey: MediaKey? = null
+    val editor: WatchEditor? = null, val resumeKey: MediaKey? = null,
+    val pendingEpisodes: Map<MediaKey, PendingEpisodes> = emptyMap(),
+    val episodesChecking: Boolean = false, val episodesCheckFailed: Boolean = false
 )
 
 class WatchlistViewModel(
     private val repository: WatchlistRepository, private val catalog: WatchlistCatalog,
     auth: StateFlow<AuthUiState>, private val saved: SavedStateHandle,
+    private val nowMillis: () -> Long = { System.currentTimeMillis() },
     private val today: () -> LocalDate = { LocalDate.now() }
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(WatchlistUiState())
@@ -41,6 +44,11 @@ class WatchlistViewModel(
     private var detailJob: Job? = null
     private var episodeJob: Job? = null
     private var epoch = 0
+    private var queryGeneration = 0
+    private data class AiredCache(val fromSeason: Int, val episodes: List<Episode>, val checkedAt: Long, val day: LocalDate)
+    private val airedCache = object : LinkedHashMap<MediaKey, AiredCache>(40, .75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<MediaKey, AiredCache>?) = size > 40
+    }
 
     init {
         viewModelScope.launch {
@@ -49,6 +57,7 @@ class WatchlistViewModel(
                 epoch++
                 queryJob?.cancel(); operationJob?.cancel(); detailJob?.cancel(); episodeJob?.cancel()
                 cursor = null
+                airedCache.clear()
                 // There are no personal disk caches; erase all visible/query/editor state on identity loss.
                 if (previous != null && previous != uid) clearPending()
                 mutableState.value = WatchlistUiState(uid = uid)
@@ -79,6 +88,7 @@ class WatchlistViewModel(
     fun clearFeedback() { mutableState.update { it.copy(error = null, notice = null) } }
 
     fun openList() { listOpened = true; if (!state.value.loading) load(reset = true) }
+    fun refreshEpisodes() { if (!state.value.loading && !state.value.busy) load(reset = true, forceEpisodes = true) }
     fun setFilter(filter: WatchFilter) {
         if (state.value.filter == filter) return
         mutableState.update { it.copy(filter = filter, entries = emptyList()) }
@@ -86,23 +96,59 @@ class WatchlistViewModel(
     }
     fun loadMore() { if (state.value.hasMore && !state.value.loading) load(false) }
 
-    private fun load(reset: Boolean) {
+    private fun load(reset: Boolean, forceEpisodes: Boolean = false) {
         val uid = state.value.uid ?: return
         val generation = epoch
         val filter = state.value.filter
         queryJob?.cancel()
+        val query = ++queryGeneration
         if (reset) cursor = null
-        mutableState.update { it.copy(loading = true, error = null) }
+        mutableState.update { it.copy(loading = true, error = null, episodesChecking = false, episodesCheckFailed = false) }
         queryJob = viewModelScope.launch {
             try {
                 val page = repository.page(uid, filter, if (reset) null else cursor)
-                if (epoch != generation) return@launch
+                ensureSession(uid)
+                if (epoch != generation || query != queryGeneration) return@launch
                 cursor = page.cursor
                 mutableState.update { it.copy(entries = (if (reset) page.entries else it.entries + page.entries).distinctBy { e -> e.catalog.key },
                     hasMore = page.hasMore, loading = false) }
+                refreshPendingSummaries()
+                val candidates = page.entries.filter { entry ->
+                    val cached = airedCache[entry.catalog.key]
+                    entry.catalog.key.type == MediaType.Tv && !(entry.status == WatchStatus.Watched && entry.episodeReference() == null) &&
+                        (forceEpisodes || cached == null || cached.fromSeason != fromSeason(entry) || cached.day != today() ||
+                            nowMillis() - cached.checkedAt !in 0 until 12 * 60 * 60 * 1000L)
+                }
+                mutableState.update { it.copy(episodesChecking = candidates.isNotEmpty()) }
+                for (entry in candidates) {
+                    try {
+                        val episodes = catalog.airedEpisodes(entry.catalog.key, fromSeason(entry), today())
+                        ensureSession(uid)
+                        if (query != queryGeneration) return@launch
+                        airedCache[entry.catalog.key] = AiredCache(fromSeason(entry), episodes, nowMillis(), today())
+                        refreshPendingSummaries()
+                    } catch (cancelled: CancellationException) { throw cancelled }
+                    catch (_: Exception) {
+                        if (epoch == generation && query == queryGeneration) mutableState.update { it.copy(episodesCheckFailed = true) }
+                    }
+                }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { if (epoch == generation) mutableState.update { it.copy(loading = false, error = failure(error)) } }
+            finally { if (epoch == generation && query == queryGeneration) mutableState.update { it.copy(episodesChecking = false) } }
         }
+    }
+
+    private fun fromSeason(entry: WatchEntry) = maxOf(1, entry.episodeReference()?.season ?: 1)
+
+    private fun refreshPendingSummaries() {
+        val summaries = state.value.entries.filter { it.catalog.key.type == MediaType.Tv }.mapNotNull { entry ->
+            if (entry.status == WatchStatus.Watched && entry.episodeReference() == null) {
+                entry.catalog.key to PendingEpisodes(0, null, needsPosition = true)
+            } else airedCache[entry.catalog.key]?.takeIf { it.fromSeason == fromSeason(entry) }?.let {
+                entry.catalog.key to entry.pendingEpisodes(it.episodes, today())
+            }
+        }.toMap()
+        mutableState.update { it.copy(pendingEpisodes = summaries) }
     }
 
     fun inspect(key: MediaKey) {
@@ -179,7 +225,12 @@ class WatchlistViewModel(
         val minute = if (status != WatchStatus.InProgress || minuteText.isBlank()) null else minuteText.toIntOrNull() ?: throw WatchException(WatchFailure.Validation)
         val pair = when (val progress = editor.entry.progress) {
             is WatchProgress.Movie -> ProgressPolicy.movie(status, minute, editor.entry.catalog.runtimeMinutes)
-            is WatchProgress.Series -> ProgressPolicy.series(status, selectedEpisode(editor), minute, progress.lastCompleted)
+            is WatchProgress.Series -> {
+                val completed = if (status == WatchStatus.Watched) catalog.latestAired(editor.entry.catalog.key)
+                    ?: selectedEpisode(editor)?.takeIf { it.aired(today()) } ?: progress.lastCompleted else progress.lastCompleted
+                ensureSession(uid)
+                ProgressPolicy.series(status, selectedEpisode(editor), minute, completed)
+            }
         }
         val entry = repository.saveProgress(uid, editor.entry, pair.first, pair.second)
         ensureSession(uid)
@@ -226,6 +277,7 @@ class WatchlistViewModel(
     private fun upsert(entry: WatchEntry) {
         mutableState.update { it.copy(memberships = it.memberships + (entry.catalog.key to entry),
             entries = it.entries.map { e -> if (e.catalog.key == entry.catalog.key) entry else e }) }
+        refreshPendingSummaries()
     }
 
     private suspend fun ensureSession(uid: String) {

@@ -41,6 +41,27 @@ data class WatchEntry(
 )
 data class PageCursor(val seconds: Long, val nanoseconds: Int, val documentId: String)
 data class WatchPage(val entries: List<WatchEntry>, val cursor: PageCursor?, val hasMore: Boolean)
+
+data class PendingEpisodes(val count: Int, val next: Episode?, val newSeason: Int? = null,
+    val needsPosition: Boolean = false)
+
+fun WatchEntry.episodeReference(): Episode? = (progress as? WatchProgress.Series)?.let {
+    it.current?.episode ?: it.lastCompleted
+}
+
+/** Count episodes after the saved position; a queued next episode has not been watched yet. */
+fun WatchEntry.pendingEpisodes(episodes: List<Episode>, today: LocalDate): PendingEpisodes {
+    val series = progress as? WatchProgress.Series ?: return PendingEpisodes(0, null)
+    val reference = episodeReference()
+    if (status == WatchStatus.Watched && reference == null) return PendingEpisodes(0, null, needsPosition = true)
+    val pending = episodes.filter { episode ->
+        episode.season > 0 && episode.aired(today) && (reference == null || episode.season > reference.season ||
+            (episode.season == reference.season && (episode.number > reference.number ||
+                (series.current?.nextToWatch == true && episode.number == reference.number))))
+    }.distinctBy { it.season to it.number }.sortedWith(compareBy({ it.season }, { it.number }))
+    return PendingEpisodes(pending.size, pending.firstOrNull(),
+        pending.firstOrNull { reference != null && it.season > reference.season }?.season)
+}
 enum class WatchFailure { Authentication, Configuration, Network, Permission, Conflict, Validation, Unknown }
 class WatchException(val reason: WatchFailure) : Exception()
 
@@ -57,6 +78,7 @@ object ProgressPolicy {
     }
 
     fun series(status: WatchStatus, episode: Episode?, minute: Int?, lastCompleted: Episode? = null): Pair<WatchStatus, WatchProgress.Series> {
+        if (status == WatchStatus.Watched) return status to WatchProgress.Series(lastCompleted = lastCompleted)
         if (status != WatchStatus.InProgress) return status to WatchProgress.Series()
         require(episode != null)
         validateEpisode(episode, minute)
@@ -93,7 +115,8 @@ object ProgressPolicy {
                 require(entry.catalog.key.type == MediaType.Tv && entry.catalog.runtimeMinutes == null)
                 progress.current?.let { validateEpisode(it.episode, it.minute) }
                 progress.lastCompleted?.let { validateEpisode(it, null) }
-                require(entry.status == WatchStatus.InProgress || (progress.current == null && progress.lastCompleted == null))
+                require(entry.status != WatchStatus.Pending || (progress.current == null && progress.lastCompleted == null))
+                require(entry.status != WatchStatus.Watched || progress.current == null)
                 require(entry.status != WatchStatus.InProgress || progress.current != null || progress.lastCompleted != null)
                 require(progress.current?.nextToWatch != true || (progress.current.minute == 0 && progress.lastCompleted != null))
             }

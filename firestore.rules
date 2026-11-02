@@ -52,12 +52,15 @@ service cloud.firestore {
       let p = d.progress;
       return exact(p, ['kind','unit','current','lastCompleted']) && p.kind == 'tv' && p.unit == 'minutes'
         && position(p.current) && (p.lastCompleted == null || episode(p.lastCompleted))
-        && (d.status == 'in_progress' || (p.current == null && p.lastCompleted == null))
+        && (d.status != 'pending' || (p.current == null && p.lastCompleted == null))
+        && (d.status != 'watched' || p.current == null)
         && (d.status != 'in_progress' || p.current != null || p.lastCompleted != null)
         && (p.current == null || p.current.mode != 'next' || (p.current.positionMinutes == 0 && p.lastCompleted != null));
     }
     function valid(d, id) {
-      return exact(d, ['tmdbId','mediaType','catalog','status','progress','progressVersion','createdAt','updatedAt'])
+      // episodeUpdates is a legacy field: existing values are preserved, never created or edited.
+      return d.keys().hasAll(['tmdbId','mediaType','catalog','status','progress','progressVersion','createdAt','updatedAt'])
+        && d.keys().hasOnly(['tmdbId','mediaType','catalog','status','progress','progressVersion','createdAt','updatedAt','episodeUpdates'])
         && d.tmdbId is int && d.tmdbId > 0 && d.tmdbId <= 2147483647 && d.mediaType in ['movie','tv']
         && id == d.mediaType + '_' + string(d.tmdbId)
         && catalog(d.catalog, d.mediaType) && d.status in ['pending','in_progress','watched']
@@ -69,10 +72,12 @@ service cloud.firestore {
       allow get: if owner(uid);
       allow list: if owner(uid) && request.query.limit != null && request.query.limit <= 30;
       allow create: if owner(uid) && valid(request.resource.data, id)
+        && !('episodeUpdates' in request.resource.data)
         && request.resource.data.status == 'pending' && request.resource.data.progressVersion == 0
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
         && (request.resource.data.catalog.providers == null || request.resource.data.catalog.providers.checkedAt == request.time);
       allow update: if owner(uid) && valid(request.resource.data, id)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['catalog','status','progress','progressVersion','updatedAt'])
         && request.resource.data.tmdbId == resource.data.tmdbId && request.resource.data.mediaType == resource.data.mediaType
         && request.resource.data.createdAt == resource.data.createdAt && request.resource.data.updatedAt == request.time
         && (

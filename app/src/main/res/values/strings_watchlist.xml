@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="wl_check_episodes">Actualizar episodios pendientes</string>
+    <string name="wl_checking_episodes">Consultando los episodios disponibles después de tu posición…</string>
+    <string name="wl_episodes_check_failed">No se han podido actualizar todos los episodios pendientes. Pulsa «Actualizar episodios pendientes» para reintentar.</string>
+    <plurals name="wl_pending_episodes">
+        <item quantity="one">Tienes %1$d episodio pendiente por ver</item>
+        <item quantity="other">Tienes %1$d episodios pendientes por ver</item>
+    </plurals>
+    <string name="wl_pending_next">Siguiente por ver: T%1$d E%2$d</string>
+    <string name="wl_pending_new_season">También tienes episodios de la temporada %1$d</string>
+    <string name="wl_no_pending_episodes">No hay más episodios emitidos después de tu posición.</string>
+    <string name="wl_pending_needs_position">Esta serie está marcada como vista sin un último episodio guardado. Indica tu posición en «Gestionar progreso» para consultar qué te queda por ver.</string>
+    <string name="wl_episode_availability_note">Episodios emitidos según TMDB. La disponibilidad en tu plataforma puede variar.</string>
     <string name="wl_title">Mi lista</string>
     <string name="wl_all">Todos</string>
     <string name="wl_movies">Películas</string>
@@ -43,7 +55,6 @@
     <string name="wl_episode_minute">T%1$d · E%2$d · minuto %3$d</string>
     <string name="wl_next_episode">Siguiente: %1$s</string>
     <string name="wl_completed_episode">Último terminado: %1$s</string>
-    <string name="wl_no_next">No hay información de otro episodio emitido.</string>
     <string name="wl_minute">Minuto actual (opcional)</string>
     <string name="wl_state">Estado de visionado</string>
     <string name="wl_season">Temporada %1$d</string>

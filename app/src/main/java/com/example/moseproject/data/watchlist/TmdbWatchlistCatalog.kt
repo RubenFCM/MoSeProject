@@ -7,7 +7,8 @@ import java.time.LocalDate
 
 // Nullable DTOs are deliberate: unknown TMDB metadata is never manufactured as zero.
 data class WatchDetailDto(val id: Int?, val title: String?, val name: String?, val poster_path: String?,
-    val release_date: String?, val first_air_date: String?, val runtime: Int?, val seasons: List<SeasonDto>?)
+    val release_date: String?, val first_air_date: String?, val runtime: Int?, val seasons: List<SeasonDto>?,
+    val last_episode_to_air: EpisodeDto? = null)
 data class SeasonDto(val season_number: Int?, val name: String?, val air_date: String?)
 data class SeasonEpisodesDto(val episodes: List<EpisodeDto>?)
 data class EpisodeDto(val id: Int?, val season_number: Int?, val episode_number: Int?, val name: String?, val air_date: String?, val runtime: Int?)
@@ -17,6 +18,7 @@ data class ProviderRegionDto(val link: String?, val flatrate: List<ProviderDto>?
 data class ProviderDto(val provider_id: Int?, val provider_name: String?, val logo_path: String?)
 
 interface WatchlistCatalog {
+    suspend fun latestAired(key: MediaKey): Episode?
     suspend fun metadata(key: MediaKey): CatalogMetadata
     suspend fun providers(key: MediaKey, region: String): Availability
     suspend fun seasons(key: MediaKey): List<Season>
@@ -29,6 +31,19 @@ class TmdbWatchlistCatalog(private val service: ApiService, private val today: (
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Pair<MediaKey, Int>, List<Episode>>?) = size > 40
     }
     private suspend fun detail(key: MediaKey) = service.watchDetail(key.type.value, key.tmdbId, Constants.API_KEY)
+
+    override suspend fun latestAired(key: MediaKey): Episode? {
+        require(key.type == MediaType.Tv)
+        val dto = detail(key)
+        require(dto.id == key.tmdbId)
+        val e = dto.last_episode_to_air ?: return null
+        val episode = Episode(e.id?.takeIf { it > 0 } ?: return null,
+            e.season_number?.takeIf { it in 1..1000 } ?: return null,
+            e.episode_number?.takeIf { it in 1..100_000 } ?: return null,
+            e.name?.takeIf(String::isNotBlank)?.take(500), e.air_date.validDate(),
+            e.runtime?.takeIf { it in 1..100_000 })
+        return episode.takeIf { it.aired(today()) }
+    }
 
     override suspend fun metadata(key: MediaKey): CatalogMetadata {
         val dto = detail(key)
@@ -79,6 +94,16 @@ class TmdbWatchlistCatalog(private val service: ApiService, private val today: (
         }
         return null
     }
+}
+
+/** Fetch real episode lists; episode-number subtraction would miscount gaps and season changes. */
+suspend fun WatchlistCatalog.airedEpisodes(key: MediaKey, fromSeason: Int, today: LocalDate): List<Episode> {
+    val result = mutableListOf<Episode>()
+    for (season in seasons(key).filter { it.number >= maxOf(1, fromSeason) &&
+        (it.airDate == null || runCatching { LocalDate.parse(it.airDate) <= today }.getOrDefault(false)) }) {
+        result += episodes(key, season.number, refresh = true).filter { it.aired(today) }
+    }
+    return result
 }
 
 private fun String?.validDate(): String? = this?.takeIf { value -> runCatching { LocalDate.parse(value) }.isSuccess }

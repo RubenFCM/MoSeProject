@@ -27,7 +27,7 @@ Serie: `progress = {kind: tv, unit: minutes, current: null|{episode, positionMin
 
 «Estoy viendo este episodio» guarda la posición manual. «Marcar episodio como visto» guarda `lastCompleted` y, si existe, selecciona el siguiente emitido con minuto 0 y `mode: next`. Si no hay siguiente emitido conocido, `current` queda null y se conserva el último terminado. **No marca toda la serie Vista**, no presupone vistos episodios intermedios ni calcula un porcentaje total. La serie solo pasa a Vista por elección manual y las nuevas temporadas no cambian ese estado.
 
-Cambiar a Pendiente elimina la posición y el último episodio terminado. Marcar Visto manualmente también elimina esa posición parcial; el propio estado registra la finalización. Volver desde Visto a En curso permite introducir una nueva posición, sin reutilizar automáticamente un final de película. Si el cambio de estado reinicia progreso existente, el editor pide confirmación. Los cambios se envían al confirmar, no por cada pulsación. Eliminar requiere confirmación separada.
+Cambiar a Pendiente elimina la posición y el último episodio terminado. Marcar Visto manualmente elimina la posición parcial; para series conserva en `lastCompleted` el último episodio emitido conocido en ese momento, para poder detectar episodios posteriores. Volver desde Visto a En curso permite introducir una nueva posición, sin reutilizar automáticamente un final de película. Si el cambio de estado reinicia progreso existente, el editor pide confirmación. Los cambios se envían al confirmar, no por cada pulsación. Eliminar requiere confirmación separada.
 
 ## Metadatos y disponibilidad
 
@@ -90,7 +90,7 @@ Para probar la **app manualmente**, usa el project_id real del JSON en lugar del
 
 Comprueba: catálogo anónimo → añadir → login/registro local → enlace de verificación en terminal/UI local → volver a ficha → En mi lista; pulsaciones repetidas; filtros y paginación; minuto 45 de película y validaciones; especiales T0; episodio actual frente a terminado y avance; marcar serie Vista y actualizar plataformas; cancelar/confirmar eliminación; cerrar sesión y entrar con otra cuenta. Repite offline y verifica que una operación no confirmada no aparece guardada. Prueba también teclado, pegado y fuente grande.
 
-## Resultado de esta entrega
+## Resultado de la entrega original de Mi lista
 
 - **46 pruebas unitarias correctas** (19 nuevas de lista, catálogo y progreso, más las 27 existentes).
 - **9 pruebas Android correctas, 0 omitidas**, en Pixel 8/API 37: las 4 existentes y 5 nuevas (3 de interfaz, incluida fuente 1,6×, y 2 de repositorio con los SDK reales contra ambos emuladores).
@@ -98,6 +98,23 @@ Comprueba: catálogo anónimo → añadir → login/registro local → enlace de
 - APK debug en modo normal y APK release sin firmar compilados. Lint debug: **0 errores, 87 advertencias**; no se han desactivado inspecciones para pasar las comprobaciones. Persisten avisos de dependencias/recursos y de Java 8 con el JDK 21 del entorno.
 - Se corrigió el área de desplazamiento de la lista para que sus botones no queden bajo la navegación flotante al usar fuente grande. El emulador bloqueado se reinició sin borrar datos antes de repetir satisfactoriamente la tanda completa.
 - No se ha verificado ni modificado la base de producción: crearla si falta, revisar/publicar reglas e índices y comprobar su disponibilidad en el proyecto real son pasos manuales. El JSON existente se reutiliza y sigue fuera de Git. No hay commit, push ni merge automático.
+
+## Episodios pendientes según el progreso
+
+El aviso compara la posición guardada con los episodios ya emitidos, desde la primera visita. No depende de si un estreno ocurrió antes o después de consultar la lista, ni necesita establecer una referencia inicial del catálogo. No hay botón para ocultar pendientes: el aviso se recalcula al avanzar o cambiar la posición.
+
+- Si estás viendo T1 E10 y T1 E11 está emitido, muestra «Tienes 1 episodio pendiente por ver» y «Siguiente por ver: T1 E11». El episodio que estás viendo continúa indicado en el resumen de progreso y no se cuenta otra vez como episodio posterior.
+- Si acabas de terminar E10 y el progreso señala E11 como siguiente (`mode: next`), E11 sí se cuenta porque todavía no has empezado a verlo.
+- Se cuentan los episodios emitidos de la temporada actual y las siguientes, indicando el siguiente por orden y si también hay otra temporada disponible. Se cuentan episodios reales, sin restar números ni suponer que no hay huecos.
+- Pendiente sin posición cuenta los episodios regulares emitidos desde el inicio. Una serie Vista con `lastCompleted` compara desde ese episodio. Las series antiguas marcadas Vistas sin posición piden indicar el progreso: no se inventa dónde dejaron de verse.
+
+Se excluyen especiales (temporada 0), episodios con fecha desconocida y futuros. El aviso se refiere a emisión según TMDB y no garantiza disponibilidad en una plataforma concreta. No marca automáticamente como vistos los episodios intermedios.
+
+Al abrir la lista o cargar una página se consultan las temporadas desde la posición de cada serie y sus episodios, excluyendo temporadas con fecha futura conocida. No se consultan temporadas anteriores a la posición ni se hacen llamadas por recomposición. Los resultados públicos se conservan en una caché RAM acotada a 40 series, durante un máximo de 12 horas y hasta el cambio de día; al cambiar de temporada de referencia se vuelve a consultar. Los cambios de progreso dentro de la misma temporada recalculan el contador inmediatamente con esa caché. «Actualizar episodios pendientes» fuerza una nueva consulta para la primera página. Al reiniciar la app se vuelve a consultar: el progreso persiste en Firestore y no se guarda un contador personal que pueda quedar obsoleto. Al cerrar sesión se vacían tanto la caché como los contadores visibles y se descartan respuestas tardías.
+
+Firestore guarda solo el progreso existente. Las reglas ahora permiten `lastCompleted` en series Vistas y siguen prohibiendo una posición parcial en ese estado. Pendiente exige progreso vacío. Si quedaron documentos con el campo `episodeUpdates` de la implementación anterior, se pueden leer y conservar al editar, pero la app ya no lo consulta ni lo modifica. No hay migración manual ni índices nuevos. Es necesario volver a publicar `firestore.rules` para permitir conservar el último episodio al marcar una serie Vista.
+
+Validación de los pendientes: **57 pruebas unitarias correctas**, **12 pruebas Android correctas sin omisiones** y **7 pruebas REST de integración/reglas correctas**. Incluye el episodio 10 frente al 11 desde la primera visita, el episodio en cola después de completar el 10, la desaparición del aviso al alcanzar el 11, temporadas posteriores, huecos en la numeración, duplicados, fechas futuras/desconocidas, fuente grande, fallos de red y cambio de cuenta. Las pruebas de Firebase se ejecutan solo contra emuladores locales.
 
 ## Fuentes oficiales
 

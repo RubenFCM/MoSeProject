@@ -65,6 +65,19 @@ async function read(user, uid = user.uid, id = 'movie_123') {
   return request(`${firestore}/v1/${path(uid, id)}`, null, user.token, 'GET');
 }
 
+test('watched series preserve completed episode reference but cannot keep a partial position or reset with completed progress', async () => {
+  const user = await account();
+  assert.equal((await write(user, series(), { id: 'tv_123' })).status, 200);
+  const finale = { id: 10, season: 1, number: 10, title: 'Finale', airDate: '2026-01-01', runtimeMinutes: 45 };
+  const progress = { kind: 'tv', unit: 'minutes', current: null, lastCompleted: finale };
+  const options = { id: 'tv_123', create: false, mask: ['status', 'progress', 'progressVersion'] };
+  assert.equal((await write(user, { status: 'watched', progress, progressVersion: 1 }, options)).status, 200);
+  assert.equal((await read(user, user.uid, 'tv_123')).result.fields.progress.mapValue.fields.lastCompleted.mapValue.fields.number.integerValue, '10');
+  assert.equal((await write(user, { status: 'watched', progress: { ...progress, current: { episode: finale, positionMinutes: 15, mode: 'watching' } }, progressVersion: 2 }, options)).status, 403);
+  assert.equal((await write(user, { status: 'pending', progress, progressVersion: 2 }, options)).status, 403);
+  assert.equal((await write(user, { status: 'pending', progress: { ...progress, lastCompleted: null }, progressVersion: 2 }, options)).status, 200);
+});
+
 test('verified owner creates once, concurrent duplicate creates cannot reset progress', async () => {
   const user = await account();
   const attempts = await Promise.all(Array.from({ length: 4 }, () => write(user, movie())));
