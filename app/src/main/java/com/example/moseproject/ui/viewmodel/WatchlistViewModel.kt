@@ -90,8 +90,12 @@ class WatchlistViewModel(
     fun openList() { listOpened = true; if (!state.value.loading) load(reset = true) }
     fun refreshEpisodes() { if (!state.value.loading && !state.value.busy) load(reset = true, forceEpisodes = true) }
     fun setFilter(filter: WatchFilter) {
-        if (state.value.filter == filter) return
-        mutableState.update { it.copy(filter = filter, entries = emptyList()) }
+        val current = state.value.filter
+        val selected = if (filter.status == WatchStatus.InProgress && current.status != WatchStatus.InProgress) {
+            filter.copy(sort = WatchSort.Updated)
+        } else filter
+        if (current == selected) return
+        mutableState.update { it.copy(filter = selected, entries = emptyList()) }
         load(reset = true)
     }
     fun loadMore() { if (state.value.hasMore && !state.value.loading) load(false) }

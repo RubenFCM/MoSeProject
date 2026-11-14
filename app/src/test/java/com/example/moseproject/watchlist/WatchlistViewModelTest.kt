@@ -215,6 +215,23 @@ class WatchlistViewModelTest {
         assertTrue(vm.state.value.entries.isEmpty()); assertTrue(vm.state.value.memberships.isEmpty())
         assertNull(vm.state.value.editor)
     }
+    @Test fun `entering in progress selects latest modification order and keeps it when changing media type`() = runTest(dispatcher) {
+        runCurrent()
+        vm.openList(); runCurrent()
+        vm.setFilter(vm.state.value.filter.copy(status = WatchStatus.InProgress)); runCurrent()
+        assertEquals(WatchSort.Updated, vm.state.value.filter.sort)
+        assertEquals(WatchFilter(status = WatchStatus.InProgress, sort = WatchSort.Updated), repo.lastFilter)
+
+        vm.setFilter(vm.state.value.filter.copy(type = MediaType.Tv)); runCurrent()
+        assertEquals(WatchFilter(MediaType.Tv, WatchStatus.InProgress, WatchSort.Updated), repo.lastFilter)
+
+        vm.setFilter(vm.state.value.filter.copy(sort = WatchSort.Added)); runCurrent()
+        assertEquals(WatchSort.Added, repo.lastFilter?.sort)
+        vm.setFilter(vm.state.value.filter.copy(status = WatchStatus.Pending)); runCurrent()
+        vm.setFilter(vm.state.value.filter.copy(status = WatchStatus.InProgress)); runCurrent()
+        assertEquals(WatchSort.Updated, repo.lastFilter?.sort)
+    }
+
     @Test fun `filters and pagination are passed to bounded repository queries`() = runTest(dispatcher) {
         runCurrent()
         vm.setFilter(WatchFilter(MediaType.Tv, WatchStatus.InProgress, WatchSort.Updated)); runCurrent()
