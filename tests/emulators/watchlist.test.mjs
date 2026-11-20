@@ -78,6 +78,23 @@ test('watched series preserve completed episode reference but cannot keep a part
   assert.equal((await write(user, { status: 'pending', progress: { ...progress, lastCompleted: null }, progressVersion: 2 }, options)).status, 200);
 });
 
+test('movies can be marked watched manually or at their known runtime and reset to pending', async () => {
+  const user = await account();
+  assert.equal((await write(user, movie())).status, 200);
+  const options = { create: false, mask: ['status', 'progress', 'progressVersion'] };
+  for (const [index, [status, minute]] of [
+    ['watched', null], ['pending', null], ['watched', 120], ['pending', null]
+  ].entries()) {
+    const result = await write(user, {
+      status, progress: { kind: 'movie', unit: 'minutes', positionMinutes: minute }, progressVersion: index + 1
+    }, options);
+    assert.equal(result.status, 200, JSON.stringify(result.result));
+    const saved = (await read(user)).result.fields;
+    assert.equal(saved.status.stringValue, status);
+    assert.equal(saved.progressVersion.integerValue, String(index + 1));
+  }
+});
+
 test('verified owner creates once, concurrent duplicate creates cannot reset progress', async () => {
   const user = await account();
   const attempts = await Promise.all(Array.from({ length: 4 }, () => write(user, movie())));
