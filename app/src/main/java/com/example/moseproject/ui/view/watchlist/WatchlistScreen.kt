@@ -1,6 +1,14 @@
 package com.example.moseproject.ui.view.watchlist
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,7 +18,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
@@ -21,6 +32,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,15 +55,16 @@ import java.time.LocalDate
 import java.util.Date
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 fun WatchlistScreen(nav: NavController, viewModel: WatchlistViewModel, auth: AuthViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val authState by auth.state.collectAsStateWithLifecycle()
     val uid = (authState.session as? AuthSession.Authenticated)?.user?.uid
     LaunchedEffect(uid) { if (uid != null) viewModel.openList() }
     CinemaScaffold(nav, AppScreen.Watchlist.route, stringResource(R.string.wl_title)) { padding ->
-        // Keep interactive rows outside the floating navigation's touch area, also at large font sizes.
-        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(bottom = LocalCinemaNavigationClearance.current),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        // Scroll behind the navigation overlay; trailing space keeps the final items reachable.
+        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("wl_list"),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp + LocalCinemaNavigationClearance.current), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (authState.session is AuthSession.Initializing || (uid != null && state.uid != uid)) {
                 item { CircularProgressIndicator(); Text(stringResource(R.string.wl_loading)) }
             } else if (uid == null) {
@@ -62,9 +76,13 @@ fun WatchlistScreen(nav: NavController, viewModel: WatchlistViewModel, auth: Aut
             } else {
                 item { WatchFilters(state.filter, viewModel::setFilter) }
                 item {
-                    OutlinedButton(onClick = viewModel::openList, enabled = !state.loading && !state.busy) { Text(stringResource(R.string.wl_refresh)) }
-                    TextButton(onClick = viewModel::refreshEpisodes, enabled = !state.loading && !state.busy && !state.episodesChecking) {
-                        Text(stringResource(R.string.wl_check_episodes))
+                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        WatchActionButton(stringResource(R.string.wl_refresh), Icons.Default.Refresh,
+                            onClick = viewModel::openList, enabled = !state.loading && !state.busy, loading = state.loading)
+                        WatchActionButton(stringResource(R.string.wl_check_episodes), Icons.Default.CheckCircle,
+                            onClick = viewModel::refreshEpisodes, enabled = !state.loading && !state.busy && !state.episodesChecking,
+                            loading = state.episodesChecking)
                     }
                     if (state.episodesChecking) Text(stringResource(R.string.wl_checking_episodes), color = CinemaMuted)
                     if (state.episodesCheckFailed) Text(stringResource(R.string.wl_episodes_check_failed), color = CinemaMuted)
@@ -86,6 +104,26 @@ fun WatchlistScreen(nav: NavController, viewModel: WatchlistViewModel, auth: Aut
             item { Credits() }
         }
         if (uid != null && uid == state.uid) WatchEditorDialog(state, viewModel)
+    }
+}
+
+@Composable
+private fun WatchActionButton(
+    label: String, icon: ImageVector, onClick: () -> Unit, enabled: Boolean,
+    loading: Boolean = false
+) {
+    val colors = MaterialTheme.colorScheme
+    Button(onClick = onClick, enabled = enabled, modifier = Modifier.heightIn(min = 48.dp),
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colors.surface, contentColor = colors.onSurface),
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)) {
+        val iconColor = if (!enabled) LocalContentColor.current else colors.primary
+        if (loading) CircularProgressIndicator(Modifier.size(18.dp), color = iconColor, strokeWidth = 2.dp)
+        else Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = iconColor)
+        Spacer(Modifier.width(8.dp))
+        Text(label, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -114,39 +152,82 @@ private fun WatchFilters(filter: WatchFilter, onChange: (WatchFilter) -> Unit) {
 
 @Composable
 private fun WatchCard(entry: WatchEntry, pending: PendingEpisodes?, busy: Boolean, onDetails: () -> Unit, onManage: () -> Unit) {
-    Surface(color = CinemaSurface, shape = RoundedCornerShape(18.dp), modifier = Modifier.testTag("wl_entry_${entry.catalog.key.documentId}")) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    var expanded by rememberSaveable(entry.catalog.key.documentId) { mutableStateOf(false) }
+    Surface(color = CinemaSurface, shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier.fillMaxWidth().testTag("wl_entry_${entry.catalog.key.documentId}")) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                AsyncImage(imageUrl(entry.catalog.posterPath), entry.catalog.title, Modifier.width(80.dp).height(120.dp), contentScale = ContentScale.Crop)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(entry.catalog.title, style = MaterialTheme.typography.titleLarge)
-                    Text(stringResource(if (entry.catalog.key.type == MediaType.Movie) R.string.wl_movie else R.string.wl_series), color = CinemaMuted)
-                    Text(stringResource(R.string.wl_release, entry.catalog.releaseDate ?: stringResource(R.string.wl_unknown)), color = CinemaMuted)
-                    entry.catalog.runtimeMinutes?.let { Text(stringResource(R.string.wl_runtime, it)) }
-                    Text(stringResource(statusResource(entry.status)), color = CinemaAccent)
+                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
+                    // The adjacent title already identifies the poster to screen readers.
+                    AsyncImage(imageUrl(entry.catalog.posterPath), null, Modifier.width(76.dp).height(114.dp), contentScale = ContentScale.Crop)
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val type = stringResource(if (entry.catalog.key.type == MediaType.Movie) R.string.wl_movie else R.string.wl_series)
+                    val year = entry.catalog.releaseDate?.take(4)?.takeIf { it.length == 4 && it.all(Char::isDigit) }
+                    Text(listOfNotNull(type, year).joinToString(" · "), style = MaterialTheme.typography.labelMedium, color = CinemaMuted)
+                    Text(entry.catalog.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
+                    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer) {
+                        Text(stringResource(statusResource(entry.status)), style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) { ProgressSummary(entry, compact = true) }
                 }
             }
-            ProgressSummary(entry)
             pending?.let { backlog ->
-                if (backlog.needsPosition) Text(stringResource(R.string.wl_pending_needs_position), color = CinemaMuted)
-                else if (backlog.count > 0) Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(12.dp)) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(pluralStringResource(R.plurals.wl_pending_episodes, backlog.count, backlog.count), style = MaterialTheme.typography.titleSmall)
+                if (backlog.count > 0) Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(10.dp),
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(pluralStringResource(R.plurals.wl_pending_episodes, backlog.count, backlog.count), style = MaterialTheme.typography.labelLarge)
                         backlog.next?.let { Text(stringResource(R.string.wl_pending_next, it.season, it.number)) }
-                        backlog.newSeason?.let { Text(stringResource(R.string.wl_pending_new_season, it)) }
-                        Text(stringResource(R.string.wl_episode_availability_note), style = MaterialTheme.typography.bodySmall)
+                        backlog.newSeason?.let { Text(stringResource(R.string.wl_pending_new_season, it), style = MaterialTheme.typography.bodySmall) }
                     }
-                } else Text(stringResource(R.string.wl_no_pending_episodes), color = CinemaMuted)
+                } else Text(stringResource(if (backlog.needsPosition) R.string.wl_position_needed_short else R.string.wl_no_pending_episodes),
+                    style = MaterialTheme.typography.bodySmall, color = CinemaMuted)
             }
-            ProviderPanel(entry.catalog.availability)
-            TextButton(onClick = onDetails) { Text(entry.catalog.title) }
-            Button(onClick = onManage, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.wl_manage)) }
+            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onDetails, modifier = Modifier.weight(1f).heightIn(min = 48.dp).wrapContentWidth(Alignment.Start),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) { Text(stringResource(R.string.wl_view_details)) }
+                val expandedState = stringResource(if (expanded) R.string.wl_expanded else R.string.wl_collapsed)
+                IconButton(onClick = { expanded = !expanded }, modifier = Modifier.size(48.dp)
+                    .testTag("wl_expand_${entry.catalog.key.documentId}").semantics { stateDescription = expandedState }) {
+                    Icon(if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = stringResource(if (expanded) R.string.wl_less_info else R.string.wl_more_info, entry.catalog.title))
+                }
+                IconButton(onClick = onManage, enabled = !busy, modifier = Modifier.size(48.dp)) {
+                    Surface(shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = if (busy) .04f else .12f),
+                        contentColor = if (busy) CinemaMuted else CinemaAccent) {
+                        Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Edit, modifier = Modifier.size(18.dp),
+                                contentDescription = stringResource(R.string.wl_edit_progress, entry.catalog.title))
+                        }
+                    }
+                }
+            }
+            AnimatedVisibility(visible = expanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.wl_release, entry.catalog.releaseDate ?: stringResource(R.string.wl_unknown)), style = MaterialTheme.typography.bodySmall, color = CinemaMuted)
+                    entry.catalog.runtimeMinutes?.let { Text(stringResource(R.string.wl_runtime, it), style = MaterialTheme.typography.bodySmall, color = CinemaMuted) }
+                    val progress = entry.progress as? WatchProgress.Series
+                    if (progress?.current != null) progress.lastCompleted?.let {
+                        Text(stringResource(R.string.wl_completed_episode, stringResource(R.string.wl_episode_position, it.season, it.number)), style = MaterialTheme.typography.bodySmall)
+                    }
+                    pending?.let {
+                        if (it.needsPosition) Text(stringResource(R.string.wl_pending_needs_position), style = MaterialTheme.typography.bodySmall)
+                        else Text(stringResource(R.string.wl_episode_availability_note), style = MaterialTheme.typography.bodySmall, color = CinemaMuted)
+                    }
+                    ProviderPanel(entry.catalog.availability)
+                }
+            }
         }
     }
 }
 
 @Composable
-fun ProgressSummary(entry: WatchEntry) {
+fun ProgressSummary(entry: WatchEntry, compact: Boolean = false) {
     when (val progress = entry.progress) {
         is WatchProgress.Movie -> {
             val minute = progress.minute
@@ -162,9 +243,9 @@ fun ProgressSummary(entry: WatchEntry) {
                 val summary = if (position.minute == null) stringResource(R.string.wl_episode_position, episode.season, episode.number)
                     else stringResource(R.string.wl_episode_minute, episode.season, episode.number, position.minute)
                 Text(if (position.nextToWatch) stringResource(R.string.wl_next_episode, summary) else summary)
-                episode.runtimeMinutes?.let { Text(stringResource(R.string.wl_episode_runtime, it), color = CinemaMuted) }
+                if (!compact) episode.runtimeMinutes?.let { Text(stringResource(R.string.wl_episode_runtime, it), color = CinemaMuted) }
             }
-            progress.lastCompleted?.let { Text(stringResource(R.string.wl_completed_episode, stringResource(R.string.wl_episode_position, it.season, it.number))) }
+            if (!compact || progress.current == null) progress.lastCompleted?.let { Text(stringResource(R.string.wl_completed_episode, stringResource(R.string.wl_episode_position, it.season, it.number))) }
             if (progress.current == null && progress.lastCompleted == null) Text(stringResource(R.string.wl_no_position))
         }
     }

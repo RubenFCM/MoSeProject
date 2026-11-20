@@ -6,6 +6,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
@@ -56,6 +58,17 @@ class WatchlistScreenTest {
         }
     }
     private fun text(id: Int) = compose.activity.getString(id)
+    private fun openProgress() {
+        val label = compose.activity.getString(R.string.wl_edit_progress, repository.entry!!.catalog.title)
+        val button = compose.onNodeWithContentDescription(label).performScrollTo()
+        val list = compose.onNodeWithTag("wl_list")
+        // ScrollTo sees the full viewport, including the area behind the floating navigation.
+        val clearance = with(compose.density) { 180.dp.toPx() }
+        val overlap = button.fetchSemanticsNode().boundsInRoot.bottom -
+            (list.fetchSemanticsNode().boundsInRoot.bottom - clearance)
+        if (overlap > 0) list.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, overlap) }
+        button.performClick()
+    }
     @Test fun pendingEpisodeAppearsOnFirstVisitAndClearsOnlyAsProgressAdvancesWithLargeFonts() {
         val ten = Episode(10, 1, 10, "Episode ten", "2026-01-01", 45)
         val eleven = ten.copy(id = 11, number = 11, title = "Episode eleven")
@@ -66,10 +79,10 @@ class WatchlistScreenTest {
         val notice = compose.activity.resources.getQuantityString(R.plurals.wl_pending_episodes, 1, 1)
         compose.onNodeWithText(notice).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(compose.activity.getString(R.string.wl_pending_next, 1, 11)).assertExists()
-        compose.onNodeWithText(text(R.string.wl_manage)).performScrollTo().performClick()
+        openProgress()
         compose.onNodeWithText(text(R.string.wl_finish_episode)).performScrollTo().performClick()
         compose.onNodeWithText(notice).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(text(R.string.wl_manage)).performScrollTo().performClick()
+        openProgress()
         compose.onNodeWithText(text(R.string.wl_finish_episode)).performScrollTo().performClick()
         compose.onNodeWithText(notice).assertDoesNotExist()
         compose.onNodeWithText(text(R.string.wl_no_pending_episodes)).assertExists()
@@ -86,7 +99,7 @@ class WatchlistScreenTest {
     }
     @Test fun progressIsSavedOnlyOnConfirmationAndWorksWithLargeFonts() {
         show(1.6f)
-        compose.onNodeWithText(text(R.string.wl_manage)).performScrollTo().performClick()
+        openProgress()
         compose.onNodeWithTag("wl_minute").performScrollTo().performTextReplacement("45")
         compose.runOnIdle { check(repository.entry!!.progress == WatchProgress.Movie(10)) }
         compose.onNodeWithText(text(R.string.wl_save)).performClick()
@@ -97,7 +110,7 @@ class WatchlistScreenTest {
         compose.onNodeWithTag("wl_type_tv").performClick()
         compose.onNodeWithText(text(R.string.wl_empty)).assertExists()
         compose.onNodeWithTag("wl_type_movie").performClick()
-        compose.onNodeWithText(text(R.string.wl_manage)).performScrollTo().performClick()
+        openProgress()
         compose.onNodeWithText(text(R.string.wl_remove)).performScrollTo().performClick()
         compose.onNodeWithText(text(R.string.wl_cancel)).performClick()
         compose.runOnIdle { check(repository.entry != null) }
@@ -107,7 +120,7 @@ class WatchlistScreenTest {
     }
     @Test fun sessionLossRemovesTheEditorAndPrivateRows() {
         show()
-        compose.onNodeWithText(text(R.string.wl_manage)).performScrollTo().performClick()
+        openProgress()
         compose.onNodeWithTag("wl_minute").assertExists()
         compose.runOnIdle { authRepo.current.value = null }
         compose.onNodeWithTag("wl_minute").assertDoesNotExist()

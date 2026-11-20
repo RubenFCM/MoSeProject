@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="wl_edit_progress">Editar progreso de %1$s</string>
+    <string name="wl_view_details">Ver ficha</string>
+    <string name="wl_more_info">Mostrar plataformas y detalles de %1$s</string>
+    <string name="wl_less_info">Ocultar plataformas y detalles de %1$s</string>
+    <string name="wl_expanded">Expandido</string>
+    <string name="wl_collapsed">Contraído</string>
+    <string name="wl_position_needed_short">Indica tu último episodio para ver los pendientes.</string>
     <string name="wl_check_episodes">Actualizar episodios pendientes</string>
     <string name="wl_checking_episodes">Consultando los episodios disponibles después de tu posición…</string>
     <string name="wl_episodes_check_failed">No se han podido actualizar todos los episodios pendientes. Pulsa «Actualizar episodios pendientes» para reintentar.</string>
